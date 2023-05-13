@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+}
+
+model User {
+  id        String    @id @default(cuid())
+  firstname String?
+  lastname  String?
+  email     String    @unique
+  password  String?
+  googleId  String?   @unique
+  avatarUrl String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
+  Group     Group[]
+  Member    Member[]
+  Expense   Expense[]
+  Paying    Paying[]
+}
+
+model Group {
+  id        String    @id @default(cuid())
+  title     String
+  user_id   String
+  creator   User      @relation(fields: [user_id], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
+  Member    Member[]
+  Expense   Expense[]
+}
+
+model Member {
+  group_id  String
+  user_id   String
+  group     Group    @relation(fields: [group_id], references: [id])
+  member    User     @relation(fields: [user_id], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([group_id, user_id])
+}
+
+model Expense {
+  id        String    @id @default(cuid())
+  title     String
+  group_id  String
+  cost      Decimal
+  user_id   String
+  group     Group     @relation(fields: [group_id], references: [id])
+  creator   User      @relation(fields: [user_id], references: [id])
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
+  Paying    Paying[]
+}
+
+model Paying {
+  expense_id String
+  user_id    String
+  cost       Decimal
+  paid       Boolean
+  paidAt     DateTime?
+  expense    Expense   @relation(fields: [expense_id], references: [id])
+  paying     User      @relation(fields: [user_id], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now())
+
+  @@unique([expense_id, user_id])
+}
