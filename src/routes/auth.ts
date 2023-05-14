@@ -122,15 +122,15 @@ export async function authRoutes(fastify: FastifyInstance) {
 
   fastify.post('/google-auth', async request => {
     const createUserBody = z.object({
-      access_token: z.string()
+      accessToken: z.string()
     })
-    const { access_token } = createUserBody.parse(request.body)
+    const { accessToken } = createUserBody.parse(request.body)
     const userResponse = await fetch(
       'https://www.googleapis.com/oauth2/v2/userinfo',
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${access_token}`
+          Authorization: `Bearer ${accessToken}`
         }
       }
     )
@@ -139,28 +139,45 @@ export async function authRoutes(fastify: FastifyInstance) {
     const userInfoSchema = z.object({
       id: z.string(),
       email: z.string().email(),
-      name: z.string(),
+      given_name: z.string(),
+      family_name: z.string(),
       picture: z.string().url()
     })
-    const userinfo = userInfoSchema.parse(userData)
+    const { id, email, given_name, family_name, picture } =
+      userInfoSchema.parse(userData)
     let user = await prisma.user.findUnique({
       where: {
-        googleId: userinfo.id
+        googleId: id
       }
     })
     if (!user) {
-      const name = userinfo.name.split(' ')
-      user = await prisma.user.create({
-        data: {
-          googleId: userinfo.id,
-          firstname: name.length > 0 ? name[0] : '',
-          lastname: name.length > 1 ? name[1] : '',
-          email: userinfo.email,
-          avatarUrl: userinfo.picture
+      const userDataGoogle = {
+        googleId: id,
+        firstname: given_name,
+        lastname: family_name,
+        email: email,
+        avatarUrl: picture
+      }
+
+      const userVerify = await prisma.user.findUnique({
+        where: {
+          email
         }
       })
+      if (userVerify) {
+        user = await prisma.user.update({
+          data: userDataGoogle,
+          where: {
+            email
+          }
+        })
+      } else {
+        user = await prisma.user.create({
+          data: userDataGoogle
+        })
+      }
     }
     const token = tokenGenerator(user, fastify)
-    return { token }
+    return { status: true, token, user }
   })
 }
