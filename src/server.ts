@@ -10,9 +10,12 @@ import { expenseRoutes } from './routes/expense'
 
 const schema = {
   type: 'object',
-  required: ['JWT_KEY'],
+  required: ['JWT_KEY', 'GOOGLE_PROFILE_URL'],
   properties: {
     JWT_KEY: {
+      type: 'string'
+    },
+    GOOGLE_PROFILE_URL: {
       type: 'string'
     }
   }

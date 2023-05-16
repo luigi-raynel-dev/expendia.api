@@ -117,15 +117,12 @@ export async function authRoutes(fastify: FastifyInstance) {
       accessToken: z.string()
     })
     const { accessToken } = createUserBody.parse(request.body)
-    const userResponse = await fetch(
-      'https://www.googleapis.com/oauth2/v2/userinfo',
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+    const userResponse = await fetch(process.env.GOOGLE_PROFILE_URL || '', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
       }
-    )
+    })
     const userData = await userResponse.json()
     const userInfoSchema = z.object({
       id: z.string(),
