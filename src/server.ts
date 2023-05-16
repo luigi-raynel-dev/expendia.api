@@ -10,12 +10,27 @@ import { expenseRoutes } from './routes/expense'
 
 const schema = {
   type: 'object',
-  required: ['JWT_KEY', 'GOOGLE_PROFILE_URL'],
+  required: [
+    'JWT_KEY',
+    'GOOGLE_PROFILE_URL',
+    'SMTP_SERVICE_PROVIDER',
+    'SMTP_AUTH_USER',
+    'SMTP_AUTH_PASS'
+  ],
   properties: {
     JWT_KEY: {
       type: 'string'
     },
     GOOGLE_PROFILE_URL: {
+      type: 'string'
+    },
+    SMTP_SERVICE_PROVIDER: {
+      type: 'string'
+    },
+    SMTP_AUTH_USER: {
+      type: 'string'
+    },
+    SMTP_AUTH_PASS: {
       type: 'string'
     }
   }
