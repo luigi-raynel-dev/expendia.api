@@ -29,7 +29,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
   )
 
-  fastify.post('/sign-in', async (request, reply) => {
+  fastify.post('/sign-in', async request => {
     const createUserBody = z.object({
       email: z.string().email(),
       password: z.string()
@@ -74,15 +74,12 @@ export async function authRoutes(fastify: FastifyInstance) {
       email: z.string().email(),
       password: z.string().min(6)
     })
-
     const { firstname, lastname, email, password } = createUserBody.parse(
       request.body
     )
-
     let user = await prisma.user.findUnique({
       where: { email }
     })
-
     if (user && (user.password || user.googleId))
       return {
         status: false,
@@ -93,16 +90,13 @@ export async function authRoutes(fastify: FastifyInstance) {
           ? 'USER_AUTHENTICATED_WITH_GOOGLE'
           : 'USER_ALREADY_EXISTS'
       }
-
     const hash = hashSync(password, genSaltSync(10))
-
     const data = {
       firstname,
       lastname,
       email,
       password: hash
     }
-
     user =
       user && !user.password
         ? await prisma.user.update({
@@ -112,14 +106,12 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
           })
         : await prisma.user.create({ data })
-
     return reply.status(201).send({
       status: true,
       message: 'Usuário cadastrado com sucesso.',
       token: tokenGenerator(user, fastify)
     })
   })
-
   fastify.post('/google-auth', async request => {
     const createUserBody = z.object({
       accessToken: z.string()
@@ -135,7 +127,6 @@ export async function authRoutes(fastify: FastifyInstance) {
       }
     )
     const userData = await userResponse.json()
-
     const userInfoSchema = z.object({
       id: z.string(),
       email: z.string().email(),
@@ -158,7 +149,6 @@ export async function authRoutes(fastify: FastifyInstance) {
         email: email,
         avatarUrl: picture
       }
-
       const userVerify = await prisma.user.findUnique({
         where: {
           email
