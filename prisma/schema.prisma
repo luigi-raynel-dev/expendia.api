@@ -15,19 +15,20 @@ generator erd {
 }
 
 model User {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   firstname String?
   lastname  String?
-  email     String    @unique
+  email     String     @unique
   password  String?
-  googleId  String?   @unique
+  googleId  String?    @unique
   avatarUrl String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
   Group     Group[]
   Member    Member[]
   Expense   Expense[]
   Paying    Paying[]
+  UserCode  UserCode[]
 }
 
 model Group {
@@ -77,4 +78,25 @@ model Paying {
   updatedAt  DateTime  @default(now())
 
   @@unique([expense_id, user_id])
+}
+
+model CodeRequestType {
+  id        String     @id @default(cuid())
+  slug      String     @unique
+  title     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
+  UserCode  UserCode[]
+}
+
+model UserCode {
+  id                   String          @id @default(cuid())
+  user_id              String
+  code_request_type_id String
+  CodeRequestType      CodeRequestType @relation(fields: [code_request_type_id], references: [id])
+  user                 User            @relation(fields: [user_id], references: [id])
+  code                 String
+  validatedIn          DateTime?
+  expiresIn            DateTime
+  createdAt            DateTime        @default(now())
 }

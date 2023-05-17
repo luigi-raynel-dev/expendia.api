@@ -4,6 +4,9 @@ import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { compareSync, genSaltSync, hashSync } from 'bcrypt'
 import { User } from '@prisma/client'
+import { sendMail } from '../lib/nodemailer'
+import cryptoRandomString from 'crypto-random-string'
+import { emailTemplate } from '../lib/emailTemplate'
 
 export const tokenGenerator = (
   { firstname, lastname, avatarUrl, email, id }: User,
@@ -112,6 +115,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       token: tokenGenerator(user, fastify)
     })
   })
+
   fastify.post('/google-auth', async request => {
     const createUserBody = z.object({
       accessToken: z.string()
@@ -166,5 +170,55 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
     const token = tokenGenerator(user, fastify)
     return { status: true, token, user }
+  })
+
+  fastify.post('/password-recovery', async request => {
+    const createUserBody = z.object({
+      email: z.string().email()
+    })
+
+    const { email } = createUserBody.parse(request.body)
+
+    let user = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (!user || !user.password)
+      return {
+        status: false,
+        message: 'Usuário não existe.',
+        error: 'USER_DOES_NOT_EXIST'
+      }
+
+    const code = cryptoRandomString({ length: 5, type: 'numeric' })
+
+    const html = `
+    <p>Recebemos uma solicitação para redefinição da senha.</p>
+    <div style="background: #ddd;padding: 10px; text-align: center;">
+      <h2>${code}</h2>
+    </div>
+    <p>Por favor, utilize este código acima para redefinir sua senha no nosso app.</p>
+    <p>Se você não solicitou a redefinição de senha, ignore este e-mail.</p>
+    `
+
+    sendMail(
+      {
+        to: email,
+        subject: 'TrooPay - Código para redefinição de senha',
+        html: emailTemplate(
+          'Código para redefinição de senha',
+          `${user.firstname} ${user.lastname}`,
+          html
+        )
+      },
+      (error, info) => {
+        if (error) console.log(error)
+        else console.log(info)
+      }
+    )
+
+    return {
+      status: true
+    }
   })
 }

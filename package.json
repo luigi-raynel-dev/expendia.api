@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -15,6 +18,7 @@
     "@fastify/jwt": "^6.7.1",
     "@prisma/client": "^4.10.1",
     "bcrypt": "^5.1.0",
+    "crypto-random-string": "^5.0.0",
     "dayjs": "^1.11.7",
     "dayjs-ext": "^2.2.0",
     "dotenv": "^16.0.3",
