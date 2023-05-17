@@ -13,7 +13,7 @@ const schema = {
   required: [
     'JWT_KEY',
     'GOOGLE_PROFILE_URL',
-    'SMTP_SERVICE_PROVIDER',
+    'SMTP_HOST',
     'SMTP_AUTH_USER',
     'SMTP_AUTH_PASS'
   ],
@@ -24,7 +24,13 @@ const schema = {
     GOOGLE_PROFILE_URL: {
       type: 'string'
     },
-    SMTP_SERVICE_PROVIDER: {
+    SMTP_HOST: {
+      type: 'string'
+    },
+    SMTP_PORT: {
+      type: 'string'
+    },
+    SMTP_IGNORE_TLS: {
       type: 'string'
     },
     SMTP_AUTH_USER: {

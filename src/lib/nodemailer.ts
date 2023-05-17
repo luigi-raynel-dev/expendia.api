@@ -12,7 +12,9 @@ export const sendMail = (
   callback: CallbackSendMail
 ) => {
   const transporter = createTransport({
-    service: process.env.SMTP_SERVICE_PROVIDER,
+    host: process.env.SMTP_HOST || 'localhost',
+    port: parseInt(process.env.SMTP_PORT || '1025'),
+    ignoreTLS: process.env.SMTP_IGNORE_TLS === 'true',
     auth: {
       user: process.env.SMTP_AUTH_USER,
       pass: process.env.SMTP_AUTH_PASS
