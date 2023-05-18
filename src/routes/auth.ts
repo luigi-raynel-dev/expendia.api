@@ -7,6 +7,7 @@ import { User } from '@prisma/client'
 import { sendMail } from '../lib/nodemailer'
 import cryptoRandomString from 'crypto-random-string'
 import { emailTemplate } from '../lib/emailTemplate'
+import dayjs from 'dayjs'
 
 export const tokenGenerator = (
   { firstname, lastname, avatarUrl, email, id }: User,
@@ -176,22 +177,17 @@ export async function authRoutes(fastify: FastifyInstance) {
     const createUserBody = z.object({
       email: z.string().email()
     })
-
     const { email } = createUserBody.parse(request.body)
-
     let user = await prisma.user.findUnique({
       where: { email }
     })
-
     if (!user || !user.password)
       return {
         status: false,
         message: 'Usuário não existe.',
         error: 'USER_DOES_NOT_EXIST'
       }
-
     const code = cryptoRandomString({ length: 5, type: 'numeric' })
-
     const html = `
     <p>Recebemos uma solicitação para redefinição da senha.</p>
     <div style="background: #ddd;padding: 10px; text-align: center;">
@@ -200,7 +196,19 @@ export async function authRoutes(fastify: FastifyInstance) {
     <p>Por favor, utilize este código acima para redefinir sua senha no nosso app.</p>
     <p>Se você não solicitou a redefinição de senha, ignore este e-mail.</p>
     `
-
+    const code_request_type = await prisma.codeRequestType.findUnique({
+      where: {
+        slug: 'password-recovery'
+      }
+    })
+    await prisma.userCode.create({
+      data: {
+        code,
+        code_request_type_id: code_request_type!.id,
+        user_id: user.id,
+        expiresIn: dayjs().add(30, 'minute').toISOString()
+      }
+    })
     sendMail(
       {
         to: email,
@@ -216,9 +224,69 @@ export async function authRoutes(fastify: FastifyInstance) {
         else console.log(info)
       }
     )
-
     return {
       status: true
     }
   })
+
+  fastify.post('/validate-code', async request => {
+    const createUserBody = z.object({
+      code: z.string(),
+      email: z.string().email()
+    })
+
+    const { code, email } = createUserBody.parse(request.body)
+
+    let user = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (!user || !user.password)
+      return {
+        status: false,
+        message: 'Usuário não existe.',
+        error: 'USER_DOES_NOT_EXIST'
+      }
+
+    const userCode = await prisma.userCode.findFirst({
+      where: {
+        user_id: user.id,
+        code,
+        expiresIn: {
+          gte: new Date()
+        }
+      }
+    })
+
+    return {
+      status: userCode !== null,
+      token: userCode ? tokenGenerator(user, fastify) : undefined
+    }
+  })
+
+  fastify.patch(
+    '/password',
+    {
+      onRequest: [authenticate]
+    },
+    async request => {
+      const createUserBody = z.object({
+        password: z.string().min(6)
+      })
+      const { password } = createUserBody.parse(request.body)
+      const { sub: id } = request.user
+      const hash = hashSync(password, genSaltSync(10))
+
+      await prisma.user.update({
+        data: {
+          password: hash
+        },
+        where: { id }
+      })
+
+      return {
+        status: true
+      }
+    }
+  )
 }
