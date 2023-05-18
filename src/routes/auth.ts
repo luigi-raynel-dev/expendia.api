@@ -252,15 +252,28 @@ export async function authRoutes(fastify: FastifyInstance) {
       where: {
         user_id: user.id,
         code,
+        validatedIn: null,
         expiresIn: {
           gte: new Date()
         }
       }
     })
 
+    if (userCode) {
+      await prisma.userCode.update({
+        data: {
+          validatedIn: new Date()
+        },
+        where: {
+          id: userCode.id
+        }
+      })
+    }
+
     return {
       status: userCode !== null,
-      token: userCode ? tokenGenerator(user, fastify) : undefined
+      token: userCode ? tokenGenerator(user, fastify) : undefined,
+      user: userCode ? user : undefined
     }
   })
 
