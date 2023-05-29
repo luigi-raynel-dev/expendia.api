@@ -52,6 +52,13 @@ export async function authRoutes(fastify: FastifyInstance) {
         error: 'USER_DOES_NOT_EXIST'
       }
 
+    if (!user.password && user.googleId)
+      return {
+        status: false,
+        message: 'Usuário autenticado com o Google.',
+        error: 'USER_AUTHENTICATED_WITH_GOOGLE'
+      }
+
     if (!compareSync(password, user?.password || ''))
       return {
         status: false,
