@@ -3,6 +3,11 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { tokenGenerator } from './auth'
+import { Group, Member } from '@prisma/client'
+
+interface GroupMembers extends Group {
+  members?: Member[]
+}
 
 export async function groupRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -12,18 +17,33 @@ export async function groupRoutes(fastify: FastifyInstance) {
     },
     async request => {
       const { sub: user_id, email } = request.user
-      let groups = await prisma.member.findMany({
+      const groups: GroupMembers[] = await prisma.group.findMany({
         include: {
-          group: {
-            select: {
-              id: true,
-              title: true
+          Member: {
+            where: {
+              user_id
             }
           }
-        },
-        where: {
-          user_id
         }
+      })
+
+      groups.map(async (group, index) => {
+        groups[index].members = await prisma.member.findMany({
+          include: {
+            member: {
+              select: {
+                id: true,
+                email: true,
+                firstname: true,
+                lastname: true,
+                avatarUrl: true
+              }
+            }
+          },
+          where: {
+            group_id: group.id
+          }
+        })
       })
 
       const user = await prisma.user.findUnique({
