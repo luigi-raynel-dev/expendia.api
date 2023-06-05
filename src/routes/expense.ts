@@ -11,6 +11,13 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       onRequest: [authenticate]
     },
     async (request, reply) => {
+      const getDayParams = z.object({
+        month: z.string(),
+        year: z.string()
+      })
+
+      const { month, year } = getDayParams.parse(request.query)
+
       const queryParams = z.object({
         id: z.string().cuid()
       })
@@ -26,17 +33,20 @@ export async function expenseRoutes(fastify: FastifyInstance) {
 
       if (!group) return reply.status(404).send()
 
-      const expenses = await prisma.paying.findMany({
+      const date = dayjs(`${year}-${month}`, 'YYYY-MM')
+
+      const expenses = await prisma.expense.findMany({
         where: {
-          user_id,
-          expense: {
-            group_id: id
+          group_id: id,
+          dueDate: {
+            gte: date.startOf('month').toDate(),
+            lt: date.endOf('month').toDate()
           }
         },
         include: {
-          expense: {
+          Paying: {
             include: {
-              Paying: true
+              paying: true
             }
           }
         }
