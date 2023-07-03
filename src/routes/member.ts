@@ -35,6 +35,51 @@ export async function memberRoutes(fastify: FastifyInstance) {
     }
   )
 
+  fastify.get(
+    '/recent-members',
+    {
+      onRequest: [authenticate]
+    },
+    async request => {
+      const { sub: user_id } = request.user
+
+      const groups = await prisma.group.findMany({
+        include: {
+          Member: {
+            include: {
+              member: true
+            }
+          }
+        },
+        where: {
+          Member: {
+            some: {
+              user_id
+            }
+          }
+        }
+      })
+
+      const groupIds: string[] = groups.map(({ id }) => id)
+
+      const members = await prisma.member.findMany({
+        where: {
+          group_id: {
+            in: groupIds
+          },
+          user_id: {
+            not: user_id
+          }
+        },
+        include: {
+          member: true
+        }
+      })
+
+      return { members }
+    }
+  )
+
   fastify.post(
     '/groups/:id/members',
     {
