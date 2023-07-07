@@ -62,17 +62,21 @@ export async function memberRoutes(fastify: FastifyInstance) {
 
       const groupIds: string[] = groups.map(({ id }) => id)
 
-      const members = await prisma.member.findMany({
+      const members = await prisma.user.findMany({
         where: {
-          group_id: {
-            in: groupIds
+          Member: {
+            every: {
+              group_id: {
+                in: groupIds
+              }
+            }
           },
-          user_id: {
+          id: {
             not: user_id
           }
         },
         include: {
-          member: true
+          Member: true
         }
       })
 
