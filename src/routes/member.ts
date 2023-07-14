@@ -84,29 +84,6 @@ export async function memberRoutes(fastify: FastifyInstance) {
     }
   )
 
-  fastify.get(
-    '/user/:email',
-    {
-      onRequest: [authenticate]
-    },
-    async (request, reply) => {
-      const queryParams = z.object({
-        email: z.string().email()
-      })
-      const { email } = queryParams.parse(request.params)
-
-      const user = await prisma.user.findUnique({
-        where: {
-          email
-        }
-      })
-
-      if (!user) return reply.status(404).send()
-
-      return { user }
-    }
-  )
-
   fastify.post(
     '/groups/:id/members',
     {

@@ -7,6 +7,7 @@ import { authRoutes } from './routes/auth'
 import { groupRoutes } from './routes/group'
 import { memberRoutes } from './routes/member'
 import { expenseRoutes } from './routes/expense'
+import { userRoutes } from './routes/user'
 
 const schema = {
   type: 'object',
@@ -66,6 +67,7 @@ async function bootstrap() {
   })
 
   await fastify.register(authRoutes)
+  await fastify.register(userRoutes)
   await fastify.register(groupRoutes)
   await fastify.register(memberRoutes)
   await fastify.register(expenseRoutes)
