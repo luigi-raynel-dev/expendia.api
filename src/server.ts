@@ -3,6 +3,7 @@ import fastifyEnv from '@fastify/env'
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import './lib/dayjs'
+import multipart from '@fastify/multipart'
 import { authRoutes } from './routes/auth'
 import { groupRoutes } from './routes/group'
 import { memberRoutes } from './routes/member'
@@ -65,6 +66,8 @@ async function bootstrap() {
   await fastify.register(jwt, {
     secret: process.env.JWT_KEY || ''
   })
+
+  await fastify.register(multipart)
 
   await fastify.register(authRoutes)
   await fastify.register(userRoutes)
