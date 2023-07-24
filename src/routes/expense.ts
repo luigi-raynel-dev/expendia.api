@@ -96,7 +96,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
         dueDate: z.string().nullable(),
         payers: z.array(
           z.object({
-            user_id: z.string().cuid(),
+            email: z.string().email(),
             cost: z.number()
           })
         )
@@ -132,13 +132,21 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       })
 
       payers.map(async payer => {
-        await prisma.paying.create({
-          data: {
-            ...payer,
-            expense_id: expense.id,
-            paid: false
+        const user = await prisma.user.findUnique({
+          where: {
+            email: payer.email
           }
         })
+        if (user) {
+          await prisma.paying.create({
+            data: {
+              user_id: user.id,
+              cost: payer.cost,
+              expense_id: expense.id,
+              paid: false
+            }
+          })
+        }
       })
 
       return reply.status(201).send({
