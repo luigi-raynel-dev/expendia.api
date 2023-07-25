@@ -75,7 +75,7 @@ async function bootstrap() {
   await fastify.register(memberRoutes)
   await fastify.register(expenseRoutes)
 
-  await fastify.listen({ port: 3333, host: '0.0.0.0' })
+  await fastify.listen({ port: Number(process.env.FASTIFY_PORT) || 3333, host: '0.0.0.0' })
 }
 
 bootstrap()
