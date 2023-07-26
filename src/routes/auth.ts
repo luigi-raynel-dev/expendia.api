@@ -17,7 +17,7 @@ export const tokenGenerator = (
     { firstname, lastname, avatarUrl, email },
     {
       sub: id,
-      expiresIn: '60 days'
+      expiresIn: `${process.env.JWT_EXP_DAYS} days`
     }
   )
 }
