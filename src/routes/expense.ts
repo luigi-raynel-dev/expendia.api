@@ -168,7 +168,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
         dueDate: z.string().nullable(),
         payers: z.array(
           z.object({
-            user_id: z.string().cuid(),
+            email: z.string().email(),
             cost: z.number()
           })
         )
@@ -207,45 +207,53 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       })
       const olds: any[] = []
       payers.map(async payer => {
-        const expensePayer = await prisma.paying.findUnique({
+        const user = await prisma.user.findUnique({
           where: {
-            expense_id_user_id: {
-              expense_id: expense?.id,
-              user_id: payer.user_id
-            }
+            email: payer.email
           }
         })
-        if (expensePayer) {
-          if (payer.cost > 0.0) {
-            await prisma.paying.update({
-              data: {
-                cost: payer.cost
-              },
-              where: {
-                expense_id_user_id: {
-                  expense_id: expense?.id,
-                  user_id: payer.user_id
-                }
+        if (user) {
+          const expensePayer = await prisma.paying.findUnique({
+            where: {
+              expense_id_user_id: {
+                expense_id: expense?.id,
+                user_id: user.id
               }
-            })
-          } else {
-            await prisma.paying.delete({
-              where: {
-                expense_id_user_id: {
-                  expense_id: expense?.id,
-                  user_id: payer.user_id
+            }
+          })
+          if (expensePayer) {
+            if (payer.cost > 0.0) {
+              await prisma.paying.update({
+                data: {
+                  cost: payer.cost
+                },
+                where: {
+                  expense_id_user_id: {
+                    expense_id: expense?.id,
+                    user_id: user.id
+                  }
                 }
+              })
+            } else {
+              await prisma.paying.delete({
+                where: {
+                  expense_id_user_id: {
+                    expense_id: expense?.id,
+                    user_id: user.id
+                  }
+                }
+              })
+            }
+          } else {
+            await prisma.paying.create({
+              data: {
+                cost: payer.cost,
+                user_id: user.id,
+                expense_id: expense?.id,
+                paid: false
               }
             })
           }
-        } else {
-          await prisma.paying.create({
-            data: {
-              ...payer,
-              expense_id: expense?.id,
-              paid: false
-            }
-          })
         }
       })
 
