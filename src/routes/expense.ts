@@ -272,12 +272,12 @@ export async function expenseRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const createGroupBody = z.object({
-        userId: z.string().cuid(),
+        email: z.string().email(),
         paid: z.boolean(),
         paidAt: z.string().nullable()
       })
 
-      const { paid, paidAt, userId } = createGroupBody.parse(request.body)
+      const { paid, paidAt, email } = createGroupBody.parse(request.body)
 
       const queryParams = z.object({
         id: z.string().cuid()
@@ -292,6 +292,10 @@ export async function expenseRoutes(fastify: FastifyInstance) {
 
       if (!expense) return reply.status(404).send()
 
+      const user = await prisma.user.findUnique({
+        where: { email }
+      })
+
       await prisma.paying.update({
         data: {
           paid,
@@ -300,7 +304,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
         where: {
           expense_id_user_id: {
             expense_id: id,
-            user_id: userId
+            user_id: user!.id
           }
         }
       })
