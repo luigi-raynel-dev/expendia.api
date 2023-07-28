@@ -23,8 +23,6 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       })
       const { id } = queryParams.parse(request.params)
 
-      const { sub: user_id } = request.user
-
       const group = await prisma.group.findUnique({
         where: {
           id
@@ -49,6 +47,9 @@ export async function expenseRoutes(fastify: FastifyInstance) {
               paying: true
             }
           }
+        },
+        orderBy: {
+          dueDate: 'asc'
         }
       })
       return { expenses }
