@@ -55,19 +55,17 @@ export async function groupRoutes(fastify: FastifyInstance) {
       const group = await prisma.group.findUnique({
         where: {
           id
-        }
-      })
-
-      const members = await prisma.member.findMany({
-        where: {
-          group_id: id
         },
         include: {
-          member: true
+          Member: {
+            include: {
+              member: true
+            }
+          }
         }
       })
 
-      return { group, members }
+      return { group }
     }
   )
 
