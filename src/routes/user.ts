@@ -2,10 +2,10 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
-import { promisify } from 'util'
-import { createWriteStream } from 'fs'
+import { MIMEType, promisify } from 'util'
+import { createWriteStream, readFileSync } from 'fs'
 import { pipeline } from 'stream'
-import { extension } from 'mime-types'
+import { contentType, extension, lookup } from 'mime-types'
 
 export async function userRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -83,15 +83,10 @@ export async function userRoutes(fastify: FastifyInstance) {
       const { sub: id } = request.user
 
       const ext = extension(data.mimetype)
-      const avatarUrl = `uploads/avatars/${id}.${ext}`
+      const path = `uploads/avatars/${id}.${ext}`
       const pump = promisify(pipeline)
-      pump(data.file, createWriteStream(avatarUrl))
-
-      const user = await prisma.user.findUniqueOrThrow({
-        where: {
-          id
-        }
-      })
+      pump(data.file, createWriteStream(path))
+      const avatarUrl = `${process.env.APP_URL}/${path}`
 
       await prisma.user.update({
         data: {
@@ -105,4 +100,16 @@ export async function userRoutes(fastify: FastifyInstance) {
       }
     }
   )
+
+  fastify.get('/uploads/avatars/:filename', async (request, reply) => {
+    const queryParams = z.object({
+      filename: z.string()
+    })
+    const { filename } = queryParams.parse(request.params)
+
+    const path = `uploads/avatars/${filename}`
+    const buffer = readFileSync(path)
+
+    reply.type(lookup(path) || 'text/html').send(buffer)
+  })
 }
