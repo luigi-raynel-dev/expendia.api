@@ -9,17 +9,10 @@ import cryptoRandomString from 'crypto-random-string'
 import { emailTemplate } from '../lib/emailTemplate'
 import dayjs from 'dayjs'
 
-export const tokenGenerator = (
-  { firstname, lastname, avatarUrl, email, id }: User,
-  fastify: FastifyInstance
-) => {
-  return fastify.jwt.sign(
-    { firstname, lastname, avatarUrl, email },
-    {
-      sub: id,
-      expiresIn: `${process.env.JWT_EXP_DAYS} days`
-    }
-  )
+export const tokenGenerator = (user: User, fastify: FastifyInstance) => {
+  return fastify.jwt.sign(user, {
+    sub: user.id
+  })
 }
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -70,6 +63,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       status: true,
       token: tokenGenerator(user, fastify),
       user: {
+        id: user.id,
         firstname: user.firstname,
         lastname: user.lastname,
         email: user.email,
@@ -120,7 +114,8 @@ export async function authRoutes(fastify: FastifyInstance) {
     return reply.status(201).send({
       status: true,
       message: 'Usuário cadastrado com sucesso.',
-      token: tokenGenerator(user, fastify)
+      token: tokenGenerator(user, fastify),
+      id: user.id
     })
   })
 

@@ -84,7 +84,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
     }
   )
 
-  fastify.post(
+  fastify.patch(
     '/groups/:id/members',
     {
       onRequest: [authenticate]
@@ -137,6 +137,29 @@ export async function memberRoutes(fastify: FastifyInstance) {
               user_id: user.id
             }
           })
+      })
+
+      const groupMembers = await prisma.member.findMany({
+        where: {
+          group_id: id
+        },
+        include: {
+          member: true
+        }
+      })
+
+      groupMembers.map(async groupMember => {
+        const memberExists = members.includes(groupMember.member.email)
+        if (!memberExists) {
+          await prisma.member.delete({
+            where: {
+              group_id_user_id: {
+                group_id: groupMember.group_id,
+                user_id: groupMember.user_id
+              }
+            }
+          })
+        }
       })
 
       return {
