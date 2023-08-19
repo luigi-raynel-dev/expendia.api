@@ -45,7 +45,7 @@ model Group {
 model Member {
   group_id  String
   user_id   String
-  group     Group    @relation(fields: [group_id], references: [id])
+  group     Group    @relation(fields: [group_id], references: [id], onDelete: Cascade)
   member    User     @relation(fields: [user_id], references: [id])
   createdAt DateTime @default(now())
 
@@ -58,7 +58,7 @@ model Expense {
   group_id  String
   cost      Decimal
   user_id   String
-  group     Group     @relation(fields: [group_id], references: [id])
+  group     Group     @relation(fields: [group_id], references: [id], onDelete: Cascade)
   creator   User      @relation(fields: [user_id], references: [id])
   dueDate   DateTime?
   createdAt DateTime  @default(now())
@@ -72,7 +72,7 @@ model Paying {
   cost       Decimal
   paid       Boolean
   paidAt     DateTime?
-  expense    Expense   @relation(fields: [expense_id], references: [id])
+  expense    Expense   @relation(fields: [expense_id], references: [id], onDelete: Cascade)
   paying     User      @relation(fields: [user_id], references: [id])
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now())

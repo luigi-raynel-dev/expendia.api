@@ -185,17 +185,7 @@ export async function groupRoutes(fastify: FastifyInstance) {
 
       if (!group) return reply.status(404).send()
 
-      await prisma.member.deleteMany({
-        where: {
-          group_id: id
-        }
-      })
-
-      await prisma.group.deleteMany({
-        where: {
-          id
-        }
-      })
+      await prisma.group.delete({ where: { id } })
 
       return {
         status: true
