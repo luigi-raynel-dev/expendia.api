@@ -126,7 +126,7 @@ export async function groupRoutes(fastify: FastifyInstance) {
     }
   )
 
-  fastify.put(
+  fastify.patch(
     '/groups/:id',
     {
       onRequest: [authenticate]
