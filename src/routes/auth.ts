@@ -67,7 +67,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         firstname: user.firstname,
         lastname: user.lastname,
         email: user.email,
-        avatarUrl: user.avatarUrl
+        avatarUrl: user.avatarUrl,
+        hasPassword: user.password !== null,
+        googleId: user.googleId
       }
     }
   })
@@ -115,7 +117,15 @@ export async function authRoutes(fastify: FastifyInstance) {
       status: true,
       message: 'Usuário cadastrado com sucesso.',
       token: tokenGenerator(user, fastify),
-      id: user.id
+      user: {
+        id: user.id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        hasPassword: user.password !== null,
+        googleId: user.googleId
+      }
     })
   })
 
@@ -172,7 +182,19 @@ export async function authRoutes(fastify: FastifyInstance) {
       }
     }
     const token = tokenGenerator(user, fastify)
-    return { status: true, token, user }
+    return {
+      status: true,
+      token,
+      user: {
+        id: user.id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        hasPassword: user.password !== null,
+        googleId: user.googleId
+      }
+    }
   })
 
   fastify.post('/password-recovery', async request => {
@@ -275,7 +297,17 @@ export async function authRoutes(fastify: FastifyInstance) {
     return {
       status: userCode !== null,
       token: userCode ? tokenGenerator(user, fastify) : undefined,
-      user: userCode ? user : undefined
+      user: !userCode
+        ? undefined
+        : {
+            id: user.id,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            email: user.email,
+            avatarUrl: user.avatarUrl,
+            hasPassword: user.password !== null,
+            googleId: user.googleId
+          }
     }
   })
 
