@@ -2,10 +2,10 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
-import { MIMEType, promisify } from 'util'
+import { promisify } from 'util'
 import { createWriteStream, readFileSync } from 'fs'
 import { pipeline } from 'stream'
-import { contentType, extension, lookup } from 'mime-types'
+import { extension, lookup } from 'mime-types'
 
 export async function userRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -51,6 +51,20 @@ export async function userRoutes(fastify: FastifyInstance) {
           id
         }
       })
+
+      if (email && email !== user.email) {
+        const emailRegistered = await prisma.user.findUnique({
+          where: {
+            email
+          }
+        })
+
+        if (emailRegistered)
+          return {
+            status: false,
+            error: 'EMAIL_ALREADY_REGISTERED'
+          }
+      }
 
       await prisma.user.update({
         data: {
