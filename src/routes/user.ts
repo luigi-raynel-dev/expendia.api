@@ -87,20 +87,18 @@ export async function userRoutes(fastify: FastifyInstance) {
       onRequest: [authenticate]
     },
     async request => {
-      const data = await request.file()
-
-      if (!data)
-        return {
-          status: false
-        }
-
       const { sub: id } = request.user
 
-      const ext = extension(data.mimetype)
-      const path = `uploads/avatars/${id}.${ext}`
-      const pump = promisify(pipeline)
-      pump(data.file, createWriteStream(path))
-      const avatarUrl = `${process.env.APP_URL}/${path}`
+      const data = await request.file()
+      let avatarUrl: null | string = null
+
+      if (data) {
+        const ext = extension(data.mimetype)
+        const path = `uploads/avatars/${id}.${ext}`
+        const pump = promisify(pipeline)
+        pump(data.file, createWriteStream(path))
+        avatarUrl = `${process.env.APP_URL}/${path}`
+      }
 
       await prisma.user.update({
         data: {
