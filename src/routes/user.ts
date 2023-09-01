@@ -81,7 +81,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     }
   )
 
-  fastify.patch(
+  fastify.post(
     '/avatar',
     {
       onRequest: [authenticate]
@@ -92,7 +92,7 @@ export async function userRoutes(fastify: FastifyInstance) {
       const data = await request.file()
       let avatarUrl: null | string = null
 
-      if (data) {
+      if (data && data.filename) {
         const ext = extension(data.mimetype)
         const path = `uploads/avatars/${id}.${ext}`
         const pump = promisify(pipeline)
@@ -108,7 +108,8 @@ export async function userRoutes(fastify: FastifyInstance) {
       })
 
       return {
-        status: true
+        status: true,
+        avatarUrl
       }
     }
   )
