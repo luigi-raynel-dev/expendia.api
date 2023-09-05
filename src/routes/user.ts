@@ -2,10 +2,9 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
-import { promisify } from 'util'
-import { createWriteStream, readFileSync } from 'fs'
-import { pipeline } from 'stream'
-import { extension, lookup } from 'mime-types'
+import { readFileSync, writeFile } from 'fs'
+import { lookup } from 'mime-types'
+import { getCurrentDateTimeInBase64 } from '../helpers/datetime'
 
 export async function userRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -81,22 +80,27 @@ export async function userRoutes(fastify: FastifyInstance) {
     }
   )
 
-  fastify.post(
+  fastify.patch(
     '/avatar',
     {
       onRequest: [authenticate]
     },
-    async request => {
+    async (request, reply) => {
+      const createBody = z.object({
+        avatar: z.string().nullable()
+      })
+      const { avatar } = createBody.parse(request.body)
+
       const { sub: id } = request.user
 
-      const data = await request.file()
       let avatarUrl: null | string = null
-
-      if (data && data.filename) {
-        const ext = extension(data.mimetype)
-        const path = `uploads/avatars/${id}.${ext}`
-        const pump = promisify(pipeline)
-        pump(data.file, createWriteStream(path))
+      if (avatar) {
+        const filename = id + getCurrentDateTimeInBase64()
+        const path = `uploads/avatars/${filename}.jpg`
+        const imageData = Buffer.from(avatar, 'base64')
+        writeFile(path, imageData, error => {
+          if (error) console.error(error)
+        })
         avatarUrl = `${process.env.APP_URL}/${path}`
       }
 
