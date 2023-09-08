@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { tokenGenerator } from './auth'
-import { Group, Member } from '@prisma/client'
 
 export async function groupRoutes(fastify: FastifyInstance) {
   fastify.get(

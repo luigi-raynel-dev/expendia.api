@@ -85,48 +85,50 @@ export async function userRoutes(fastify: FastifyInstance) {
     {
       onRequest: [authenticate]
     },
-    async (request, reply) => {
+    async request => {
       const createBody = z.object({
         avatar: z.string().nullable()
       })
       const { avatar } = createBody.parse(request.body)
 
       const { sub: id } = request.user
-
-      let avatarUrl: null | string = null
-      if (avatar) {
-        const filename = id + getCurrentDateTimeInBase64()
-        const path = `uploads/avatars/${filename}.jpg`
-        const imageData = Buffer.from(avatar, 'base64')
-        writeFile(path, imageData, error => {
-          if (error) console.error(error)
-        })
-        avatarUrl = `${process.env.APP_URL}/${path}`
-      }
+      const avatarUri = `/avatar/${id}.jpg`
 
       await prisma.user.update({
         data: {
-          avatarUrl
+          avatarBase64: avatar,
+          avatarUri
         },
         where: { id }
       })
 
       return {
         status: true,
-        avatarUrl
+        avatarUri
       }
     }
   )
 
-  fastify.get('/uploads/avatars/:filename', async (request, reply) => {
+  fastify.get('/avatar/:id', async (request, reply) => {
     const queryParams = z.object({
-      filename: z.string()
+      id: z.string()
     })
-    const { filename } = queryParams.parse(request.params)
+    const { id } = queryParams.parse(request.params)
 
-    const path = `uploads/avatars/${filename}`
-    const buffer = readFileSync(path)
+    try {
+      const { avatarBase64 } = await prisma.user.findFirstOrThrow({
+        select: { avatarBase64: true },
+        where: { avatarUri: `/avatar/${id}` }
+      })
 
-    reply.type(lookup(path) || 'text/html').send(buffer)
+      if (avatarBase64) {
+        const buffer = Buffer.from(avatarBase64, 'base64')
+        reply.type('image/jpeg').send(buffer)
+      } else {
+        reply.status(404).send()
+      }
+    } catch (err) {
+      reply.status(404).send()
+    }
   })
 }

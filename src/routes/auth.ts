@@ -8,11 +8,18 @@ import { sendMail } from '../lib/nodemailer'
 import cryptoRandomString from 'crypto-random-string'
 import { emailTemplate } from '../lib/emailTemplate'
 import dayjs from 'dayjs'
+import axios from 'axios'
 
-export const tokenGenerator = (user: User, fastify: FastifyInstance) => {
-  return fastify.jwt.sign(user, {
-    sub: user.id
-  })
+export const tokenGenerator = (
+  { email, id }: User,
+  fastify: FastifyInstance
+) => {
+  return fastify.jwt.sign(
+    { email },
+    {
+      sub: id
+    }
+  )
 }
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -63,13 +70,9 @@ export async function authRoutes(fastify: FastifyInstance) {
       status: true,
       token: tokenGenerator(user, fastify),
       user: {
-        id: user.id,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        email: user.email,
-        avatarUrl: user.avatarUrl,
+        ...user,
         hasPassword: user.password !== null,
-        googleId: user.googleId
+        password: undefined
       }
     }
   })
@@ -118,13 +121,9 @@ export async function authRoutes(fastify: FastifyInstance) {
       message: 'Usuário cadastrado com sucesso.',
       token: tokenGenerator(user, fastify),
       user: {
-        id: user.id,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        email: user.email,
-        avatarUrl: user.avatarUrl,
+        ...user,
         hasPassword: user.password !== null,
-        googleId: user.googleId
+        password: undefined
       }
     })
   })
@@ -150,49 +149,54 @@ export async function authRoutes(fastify: FastifyInstance) {
     })
     const { id, email, given_name, family_name, picture } =
       userInfoSchema.parse(userData)
+
+    let image = await axios.get(picture, { responseType: 'arraybuffer' })
+    const avatarBase64 = Buffer.from(image.data).toString('base64')
+
+    const userDataGoogle = {
+      googleId: id,
+      firstname: given_name,
+      lastname: family_name,
+      email,
+      avatarBase64
+    }
     let user = await prisma.user.findUnique({
       where: {
-        googleId: id
+        email
       }
     })
-    if (!user) {
-      const userDataGoogle = {
-        googleId: id,
-        firstname: given_name,
-        lastname: family_name,
-        email: email,
-        avatarUrl: picture
-      }
-      const userVerify = await prisma.user.findUnique({
+    if (user)
+      user = await prisma.user.update({
+        data: {
+          avatarBase64,
+          avatarUri: `/avatar/${user.id}.jpg`
+        },
         where: {
-          email
+          id: user.id
         }
       })
-      if (userVerify) {
-        user = await prisma.user.update({
-          data: userDataGoogle,
-          where: {
-            email
-          }
-        })
-      } else {
-        user = await prisma.user.create({
-          data: userDataGoogle
-        })
-      }
+    else {
+      user = await prisma.user.create({
+        data: userDataGoogle
+      })
+      user = await prisma.user.update({
+        data: {
+          avatarUri: `/avatar/${user.id}.jpg`
+        },
+        where: {
+          id: user.id
+        }
+      })
     }
+
     const token = tokenGenerator(user, fastify)
     return {
       status: true,
       token,
       user: {
-        id: user.id,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        email: user.email,
-        avatarUrl: user.avatarUrl,
+        ...user,
         hasPassword: user.password !== null,
-        googleId: user.googleId
+        password: undefined
       }
     }
   })
@@ -300,13 +304,9 @@ export async function authRoutes(fastify: FastifyInstance) {
       user: !userCode
         ? undefined
         : {
-            id: user.id,
-            firstname: user.firstname,
-            lastname: user.lastname,
-            email: user.email,
-            avatarUrl: user.avatarUrl,
+            ...user,
             hasPassword: user.password !== null,
-            googleId: user.googleId
+            password: undefined
           }
     }
   })
