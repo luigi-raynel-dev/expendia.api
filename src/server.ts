@@ -9,6 +9,7 @@ import { groupRoutes } from './routes/group'
 import { memberRoutes } from './routes/member'
 import { expenseRoutes } from './routes/expense'
 import { userRoutes } from './routes/user'
+import { termsRoutes } from './routes/terms'
 
 const schema = {
   type: 'object',
@@ -74,8 +75,12 @@ async function bootstrap() {
   await fastify.register(groupRoutes)
   await fastify.register(memberRoutes)
   await fastify.register(expenseRoutes)
+  await fastify.register(termsRoutes)
 
-  await fastify.listen({ port: Number(process.env.FASTIFY_PORT) || 3333, host: '0.0.0.0' })
+  await fastify.listen({
+    port: Number(process.env.FASTIFY_PORT) || 3333,
+    host: '0.0.0.0'
+  })
 }
 
 bootstrap()

@@ -30,6 +30,7 @@ model User {
   Expense      Expense[]
   Paying       Paying[]
   UserCode     UserCode[]
+  UserTerm     UserTerm[]
 }
 
 model Group {
@@ -100,4 +101,26 @@ model UserCode {
   validatedIn          DateTime?
   expiresIn            DateTime
   createdAt            DateTime        @default(now())
+}
+
+model Term {
+  id        String     @id @default(cuid())
+  title     String     @unique
+  slug      String     @unique
+  text      String     @db.Text
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
+  UserTerm  UserTerm[]
+}
+
+model UserTerm {
+  user_id    String
+  term_id    String
+  accepted   Boolean?
+  acceptedAt DateTime?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  term Term @relation(fields: [term_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, term_id])
 }
