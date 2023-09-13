@@ -9,6 +9,7 @@ import cryptoRandomString from 'crypto-random-string'
 import { emailTemplate } from '../lib/emailTemplate'
 import dayjs from 'dayjs'
 import axios from 'axios'
+import { acceptRequiredTerms } from '../modules/userTerms'
 
 export const tokenGenerator = (
   { email, id }: User,
@@ -116,6 +117,9 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
           })
         : await prisma.user.create({ data })
+
+    acceptRequiredTerms(user.id)
+
     return reply.status(201).send({
       status: true,
       message: 'Usuário cadastrado com sucesso.',
@@ -188,6 +192,8 @@ export async function authRoutes(fastify: FastifyInstance) {
         }
       })
     }
+
+    acceptRequiredTerms(user.id)
 
     const token = tokenGenerator(user, fastify)
     return {
