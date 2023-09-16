@@ -1,16 +1,20 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "troopay",
+  "version": "0.0.1",
+  "main": "server.js",
+  "engines": {
+    "node": "18"
+  },
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsup src"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "keywords": [],
-  "author": "",
+  "author": "luigi-raynel-dev",
   "license": "ISC",
   "dependencies": {
     "@fastify/cors": "^8.2.0",
@@ -21,7 +25,6 @@
     "@types/mime-types": "^2.1.1",
     "axios": "^1.5.0",
     "bcrypt": "^5.1.0",
-    "crypto-random-string": "^5.0.0",
     "dayjs": "^1.11.8",
     "dayjs-ext": "^2.2.0",
     "dotenv": "^16.0.3",
@@ -29,6 +32,7 @@
     "fs": "^0.0.1-security",
     "mime-types": "^2.1.35",
     "nodemailer": "^6.9.2",
+    "randomatic": "^3.1.1",
     "stream": "^0.0.2",
     "util": "^0.12.5",
     "zod": "^3.20.6"
@@ -37,8 +41,10 @@
     "@mermaid-js/mermaid-cli": "^9.3.0",
     "@types/bcrypt": "^5.0.0",
     "@types/nodemailer": "^6.4.7",
+    "@types/randomatic": "^3.1.3",
     "prisma": "^4.10.1",
     "prisma-erd-generator": "^1.2.5",
+    "tsup": "^7.2.0",
     "tsx": "^3.12.3",
     "typescript": "^4.9.5"
   }

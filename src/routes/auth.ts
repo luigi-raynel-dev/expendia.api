@@ -5,11 +5,11 @@ import { authenticate } from '../plugins/authenticate'
 import { compareSync, genSaltSync, hashSync } from 'bcrypt'
 import { User } from '@prisma/client'
 import { sendMail } from '../lib/nodemailer'
-import cryptoRandomString from 'crypto-random-string'
 import { emailTemplate } from '../lib/emailTemplate'
 import dayjs from 'dayjs'
 import axios from 'axios'
 import { acceptRequiredTerms } from '../modules/userTerms'
+import randomatic from 'randomatic'
 
 export const tokenGenerator = (
   { email, id }: User,
@@ -212,6 +212,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       email: z.string().email()
     })
     const { email } = createUserBody.parse(request.body)
+
     let user = await prisma.user.findUnique({
       where: { email }
     })
@@ -221,7 +222,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         message: 'Usuário não existe.',
         error: 'USER_DOES_NOT_EXIST'
       }
-    const code = cryptoRandomString({ length: 5, type: 'numeric' })
+
+    const code = randomatic('0', 5)
+
     const html = `
     <p>Recebemos uma solicitação para redefinição da senha.</p>
     <div style="background: #ddd;padding: 10px; text-align: center;">
