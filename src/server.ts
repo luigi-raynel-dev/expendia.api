@@ -68,6 +68,14 @@ async function bootstrap() {
     secret: process.env.JWT_KEY || ''
   })
 
+  fastify.get('/ping', async (_, reply) => {
+    return reply.status(200).send({
+      status: true,
+      statusMessage: 'HTTP Server running!',
+      message: 'pong'
+    })
+  })
+
   await fastify.register(multipart)
 
   await fastify.register(authRoutes)
