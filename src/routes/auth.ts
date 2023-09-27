@@ -249,7 +249,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     sendMail(
       {
         to: email,
-        subject: 'TrooPay - Código para redefinição de senha',
+        subject: 'Expendia - Código para redefinição de senha',
         html: emailTemplate(
           'Código para redefinição de senha',
           `${user.firstname} ${user.lastname}`,
