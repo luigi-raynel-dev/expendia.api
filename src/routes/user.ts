@@ -90,10 +90,9 @@ export async function userRoutes(fastify: FastifyInstance) {
         avatar: z.string().nullable()
       })
       const { avatar } = createBody.parse(request.body)
-
       const { sub: id } = request.user
-      const avatarUri = `/avatar/${id}.jpg`
-
+      const date = new Date()
+      const avatarUri = avatar ? `/avatar/${id}_${date.getTime()}.jpg` : null
       await prisma.user.update({
         data: {
           avatarBase64: avatar,
@@ -101,7 +100,6 @@ export async function userRoutes(fastify: FastifyInstance) {
         },
         where: { id }
       })
-
       return {
         status: true,
         avatarUri
