@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
+import { User } from '@prisma/client'
 
 export async function memberRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -60,24 +61,17 @@ export async function memberRoutes(fastify: FastifyInstance) {
         }
       })
 
-      const groupIds: string[] = groups.map(({ id }) => id)
+      const members: User[] = []
 
-      const members = await prisma.user.findMany({
-        where: {
-          Member: {
-            every: {
-              group_id: {
-                in: groupIds
-              }
-            }
-          },
-          id: {
-            not: user_id
+      groups.forEach(({ Member }) => {
+        Member.forEach(({ member }) => {
+          if (
+            !members.find(({ id }) => id === member.id) &&
+            member.id !== user_id
+          ) {
+            members.push(member)
           }
-        },
-        include: {
-          Member: true
-        }
+        })
       })
 
       return { members }
