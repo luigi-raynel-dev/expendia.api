@@ -246,24 +246,16 @@ export async function authRoutes(fastify: FastifyInstance) {
         expiresIn: dayjs().add(30, 'minute').toISOString()
       }
     })
-    sendMail(
-      {
-        to: email,
-        subject: 'Expendia - Código para redefinição de senha',
-        html: emailTemplate(
-          'Código para redefinição de senha',
-          `${user.firstname} ${user.lastname}`,
-          html
-        )
-      },
-      (error, info) => {
-        if (error) console.log(error)
-        else console.log(info)
-      }
-    )
-    return {
-      status: true
-    }
+    const resp = await sendMail({
+      to: email,
+      subject: 'Expendia - Código para redefinição de senha',
+      html: emailTemplate(
+        'Código para redefinição de senha',
+        `${user.firstname} ${user.lastname}`,
+        html
+      )
+    })
+    return resp
   })
 
   fastify.post('/validate-code', async request => {
