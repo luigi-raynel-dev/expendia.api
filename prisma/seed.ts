@@ -3,11 +3,23 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function run() {
-  await prisma.codeRequestType.create({
-    data: {
+  const codeRequestTypes = [
+    {
       slug: 'password-recovery',
       title: 'Password Recovery'
+    },
+    {
+      slug: 'delete-account',
+      title: 'Delete Account'
     }
+  ]
+
+  codeRequestTypes.map(async data => {
+    const type = await prisma.codeRequestType.findUnique({
+      where: { slug: data.slug }
+    })
+
+    if (!type) await prisma.codeRequestType.create({ data })
   })
 }
 

@@ -41,6 +41,9 @@ const schema = {
     },
     SMTP_AUTH_PASS: {
       type: 'string'
+    },
+    ANONYM_EMAIL: {
+      type: 'string'
     }
   }
 }
