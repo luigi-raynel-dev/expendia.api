@@ -41,6 +41,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     })
 
     const { email, password } = createUserBody.parse(request.body)
+    console.log(email)
 
     let user = await prisma.user.findUnique({
       where: { email }
@@ -389,7 +390,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
       if (!userCode)
         return {
-          status: true,
+          status: false,
           error: 'INVALID_CODE'
         }
 
