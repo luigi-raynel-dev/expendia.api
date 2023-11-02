@@ -4,12 +4,9 @@ import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { compareSync, genSaltSync, hashSync } from 'bcrypt'
 import { User } from '@prisma/client'
-import { sendMail } from '../lib/nodemailer'
-import { emailTemplate } from '../lib/emailTemplate'
-import dayjs from 'dayjs'
 import axios from 'axios'
 import { acceptRequiredTerms } from '../modules/userTerms'
-import randomatic from 'randomatic'
+import { sendCode, validateCode } from '../modules/userCode'
 
 export const tokenGenerator = (
   { email, id }: User,
@@ -224,39 +221,13 @@ export async function authRoutes(fastify: FastifyInstance) {
         error: 'USER_DOES_NOT_EXIST'
       }
 
-    const code = randomatic('0', 5)
+    const resp = await sendCode(
+      user,
+      'Código para redefinição de senha',
+      'redefinição da senha',
+      'password-recovery'
+    )
 
-    const html = `
-    <p>Recebemos uma solicitação para redefinição da senha.</p>
-    <div style="background: #ddd;padding: 10px; text-align: center;">
-      <h2>${code}</h2>
-    </div>
-    <p>Por favor, utilize este código acima para redefinir sua senha no nosso app.</p>
-    <p>Se você não solicitou a redefinição de senha, ignore este e-mail.</p>
-    <p>Este código expira em 30 minutos, caso expirado será necessário solicitar um novo pelo aplicativo.</p>
-    `
-    const code_request_type = await prisma.codeRequestType.findUniqueOrThrow({
-      where: {
-        slug: 'password-recovery'
-      }
-    })
-    await prisma.userCode.create({
-      data: {
-        code,
-        code_request_type_id: code_request_type.id,
-        user_id: user.id,
-        expiresIn: dayjs().add(30, 'minute').toISOString()
-      }
-    })
-    const resp = await sendMail({
-      to: email,
-      subject: 'Expendia - Código para redefinição de senha',
-      html: emailTemplate(
-        'Código para redefinição de senha',
-        `${user.firstname} ${user.lastname}`,
-        html
-      )
-    })
     return resp
   })
 
@@ -279,27 +250,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         error: 'USER_DOES_NOT_EXIST'
       }
 
-    const userCode = await prisma.userCode.findFirst({
-      where: {
-        user_id: user.id,
-        code,
-        validatedIn: null,
-        expiresIn: {
-          gte: new Date()
-        }
-      }
-    })
-
-    if (userCode) {
-      await prisma.userCode.update({
-        data: {
-          validatedIn: new Date()
-        },
-        where: {
-          id: userCode.id
-        }
-      })
-    }
+    const userCode = await validateCode(user.id, code)
 
     return {
       status: userCode !== null,
@@ -326,39 +277,12 @@ export async function authRoutes(fastify: FastifyInstance) {
         where: { id: user_id }
       })
 
-      const code = randomatic('0', 5)
-
-      const html = `
-    <p>Recebemos uma solicitação para exclusão da sua conta.</p>
-    <div style="background: #ddd;padding: 10px; text-align: center;">
-      <h2>${code}</h2>
-    </div>
-    <p>Por favor, utilize este código acima para confirmar a exclusão da sua conta no nosso app.</p>
-    <p>Se você não solicitou a exclusão da sua conta, ignore este e-mail.</p
-    <p>Este código expira em 30 minutos, caso expirado será necessário solicitar um novo pelo aplicativo.</p>
-    `
-      const code_request_type = await prisma.codeRequestType.findUniqueOrThrow({
-        where: {
-          slug: 'delete-account'
-        }
-      })
-      await prisma.userCode.create({
-        data: {
-          code,
-          code_request_type_id: code_request_type.id,
-          user_id: user.id,
-          expiresIn: dayjs().add(30, 'minute').toISOString()
-        }
-      })
-      const resp = await sendMail({
-        to: user.email,
-        subject: 'Expendia - Código para exclusão da sua conta',
-        html: emailTemplate(
-          'Código para exclusão da sua conta',
-          `${user.firstname} ${user.lastname}`,
-          html
-        )
-      })
+      const resp = await sendCode(
+        user,
+        'Código para exclusão da sua conta',
+        'exclusão da sua conta',
+        'delete-account'
+      )
       return resp
     }
   )
@@ -377,31 +301,13 @@ export async function authRoutes(fastify: FastifyInstance) {
 
       const { sub: user_id } = request.user
 
-      const userCode = await prisma.userCode.findFirst({
-        where: {
-          user_id,
-          code,
-          validatedIn: null,
-          expiresIn: {
-            gte: new Date()
-          }
-        }
-      })
+      const userCode = await validateCode(user_id, code)
 
       if (!userCode)
         return {
           status: false,
           error: 'INVALID_CODE'
         }
-
-      await prisma.userCode.update({
-        data: {
-          validatedIn: new Date()
-        },
-        where: {
-          id: userCode.id
-        }
-      })
 
       await prisma.user.update({
         data: {
