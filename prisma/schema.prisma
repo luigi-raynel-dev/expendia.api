@@ -15,22 +15,23 @@ generator erd {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  firstname    String?
-  lastname     String?
-  email        String     @unique
-  password     String?
-  googleId     String?    @unique
-  avatarBase64 String?    @db.LongText
-  avatarUri    String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @default(now())
-  Group        Group[]
-  Member       Member[]
-  Expense      Expense[]
-  Paying       Paying[]
-  UserCode     UserCode[]
-  UserTerm     UserTerm[]
+  id             String     @id @default(cuid())
+  firstname      String?
+  lastname       String?
+  email          String     @unique
+  confirmedEmail Boolean?
+  password       String?
+  googleId       String?    @unique
+  avatarBase64   String?    @db.LongText
+  avatarUri      String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @default(now())
+  Group          Group[]
+  Member         Member[]
+  Expense        Expense[]
+  Paying         Paying[]
+  UserCode       UserCode[]
+  UserTerm       UserTerm[]
 }
 
 model Group {
