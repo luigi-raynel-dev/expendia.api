@@ -236,6 +236,24 @@ export async function authRoutes(fastify: FastifyInstance) {
   })
 
   fastify.post(
+    '/resend-email-confirmation',
+    {
+      onRequest: [authenticate]
+    },
+    async request => {
+      const { sub: user_id } = request.user
+
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: user_id }
+      })
+
+      const resp = await sendConfirmationEmail(user)
+
+      return resp
+    }
+  )
+
+  fastify.post(
     '/confirm-email',
     {
       onRequest: [authenticate]
