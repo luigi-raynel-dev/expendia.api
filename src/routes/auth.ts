@@ -164,7 +164,8 @@ export async function authRoutes(fastify: FastifyInstance) {
       firstname: given_name,
       lastname: family_name,
       email,
-      avatarBase64
+      avatarBase64,
+      confirmedEmail: true
     }
     let user = await prisma.user.findUnique({
       where: {
@@ -175,7 +176,8 @@ export async function authRoutes(fastify: FastifyInstance) {
       user = await prisma.user.update({
         data: {
           avatarBase64,
-          avatarUri: `/avatar/${user.id}.jpg`
+          avatarUri: `/avatar/${user.id}.jpg`,
+          confirmedEmail: true
         },
         where: {
           id: user.id
