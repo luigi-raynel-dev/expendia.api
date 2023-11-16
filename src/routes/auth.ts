@@ -235,6 +235,43 @@ export async function authRoutes(fastify: FastifyInstance) {
     return resp
   })
 
+  fastify.post(
+    '/confirm-email',
+    {
+      onRequest: [authenticate]
+    },
+    async request => {
+      const createUserBody = z.object({
+        code: z.string()
+      })
+
+      const { code } = createUserBody.parse(request.body)
+
+      const { sub: user_id } = request.user
+
+      const userCode = await validateCode(user_id, code)
+
+      if (!userCode)
+        return {
+          status: false,
+          error: 'INVALID_CODE'
+        }
+
+      await prisma.user.update({
+        data: {
+          confirmedEmail: true
+        },
+        where: {
+          id: user_id
+        }
+      })
+
+      return {
+        status: true
+      }
+    }
+  )
+
   fastify.post('/validate-code', async request => {
     const createUserBody = z.object({
       code: z.string(),
@@ -320,7 +357,9 @@ export async function authRoutes(fastify: FastifyInstance) {
           email: `anonym_${user_id}@expendia.luigiraynel.com.br`,
           password: null,
           avatarBase64: null,
-          avatarUri: null
+          avatarUri: null,
+          googleId: null,
+          confirmedEmail: false
         },
         where: {
           id: user_id
