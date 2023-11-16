@@ -7,6 +7,7 @@ import { User } from '@prisma/client'
 import axios from 'axios'
 import { acceptRequiredTerms } from '../modules/userTerms'
 import { sendCode, validateCode } from '../modules/userCode'
+import { sendConfirmationEmail } from '../modules/Welcome'
 
 export const tokenGenerator = (
   { email, id }: User,
@@ -116,10 +117,13 @@ export async function authRoutes(fastify: FastifyInstance) {
           })
         : await prisma.user.create({ data })
 
-    acceptRequiredTerms(user.id)
+    await acceptRequiredTerms(user.id)
+
+    const confirmationEmail = await sendConfirmationEmail(user)
 
     return reply.status(201).send({
       status: true,
+      confirmationEmail,
       message: 'Usuário cadastrado com sucesso.',
       token: tokenGenerator(user, fastify),
       user: {

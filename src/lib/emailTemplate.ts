@@ -1,4 +1,10 @@
-export function emailTemplate(title: string, username: string, body: string) {
+export function emailTemplate(
+  title: string,
+  username: string,
+  body: string,
+  helloLabel?: string,
+  graciouslyHTML?: string | null
+) {
   return `
     <!DOCTYPE html>
     <html>
@@ -8,9 +14,13 @@ export function emailTemplate(title: string, username: string, body: string) {
     </head>
     <body style="font-family: Verdana">
       <h2>Expendia - ${title}</h2>
-      <h3>Olá, ${username}</p>
+      <h3>${helloLabel || `Olá`} ${username},</h3>
       ${body}
-      <p>Atenciosamente, Expendia</p>
+      ${
+        graciouslyHTML !== null
+          ? graciouslyHTML || `<p>Atenciosamente, Expendia</p>`
+          : ''
+      }
       <p style="color: #888">Este é um e-mail automático. Por favor não responda-o.</p>
     </body>
     </html>
