@@ -7,6 +7,7 @@ import { User } from '@prisma/client'
 import axios from 'axios'
 import { acceptRequiredTerms } from '../modules/userTerms'
 import { sendCode, validateCode } from '../modules/userCode'
+import { sendConfirmationEmail } from '../modules/Welcome'
 
 export const tokenGenerator = (
   { email, id }: User,
@@ -116,10 +117,13 @@ export async function authRoutes(fastify: FastifyInstance) {
           })
         : await prisma.user.create({ data })
 
-    acceptRequiredTerms(user.id)
+    await acceptRequiredTerms(user.id)
+
+    const confirmationEmail = await sendConfirmationEmail(user)
 
     return reply.status(201).send({
       status: true,
+      confirmationEmail,
       message: 'Usuário cadastrado com sucesso.',
       token: tokenGenerator(user, fastify),
       user: {
@@ -160,7 +164,8 @@ export async function authRoutes(fastify: FastifyInstance) {
       firstname: given_name,
       lastname: family_name,
       email,
-      avatarBase64
+      avatarBase64,
+      confirmedEmail: true
     }
     let user = await prisma.user.findUnique({
       where: {
@@ -171,7 +176,8 @@ export async function authRoutes(fastify: FastifyInstance) {
       user = await prisma.user.update({
         data: {
           avatarBase64,
-          avatarUri: `/avatar/${user.id}.jpg`
+          avatarUri: `/avatar/${user.id}.jpg`,
+          confirmedEmail: true
         },
         where: {
           id: user.id
@@ -230,6 +236,61 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     return resp
   })
+
+  fastify.post(
+    '/resend-email-confirmation',
+    {
+      onRequest: [authenticate]
+    },
+    async request => {
+      const { sub: user_id } = request.user
+
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: user_id }
+      })
+
+      const resp = await sendConfirmationEmail(user)
+
+      return resp
+    }
+  )
+
+  fastify.post(
+    '/confirm-email',
+    {
+      onRequest: [authenticate]
+    },
+    async request => {
+      const createUserBody = z.object({
+        code: z.string()
+      })
+
+      const { code } = createUserBody.parse(request.body)
+
+      const { sub: user_id } = request.user
+
+      const userCode = await validateCode(user_id, code)
+
+      if (!userCode)
+        return {
+          status: false,
+          error: 'INVALID_CODE'
+        }
+
+      await prisma.user.update({
+        data: {
+          confirmedEmail: true
+        },
+        where: {
+          id: user_id
+        }
+      })
+
+      return {
+        status: true
+      }
+    }
+  )
 
   fastify.post('/validate-code', async request => {
     const createUserBody = z.object({
@@ -316,7 +377,9 @@ export async function authRoutes(fastify: FastifyInstance) {
           email: `anonym_${user_id}@expendia.luigiraynel.com.br`,
           password: null,
           avatarBase64: null,
-          avatarUri: null
+          avatarUri: null,
+          googleId: null,
+          confirmedEmail: false
         },
         where: {
           id: user_id

@@ -11,6 +11,10 @@ async function run() {
     {
       slug: 'delete-account',
       title: 'Delete Account'
+    },
+    {
+      slug: 'confirm-email',
+      title: 'Confirm email'
     }
   ]
 
