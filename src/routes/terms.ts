@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
+import { sysadmin } from '../plugins/sysadmin'
 
 export async function termsRoutes(fastify: FastifyInstance) {
   fastify.get('/terms', async () => {
@@ -137,7 +138,7 @@ export async function termsRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/terms',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, sysadmin]
     },
     async request => {
       const createBody = z.object({
@@ -164,7 +165,7 @@ export async function termsRoutes(fastify: FastifyInstance) {
   fastify.put(
     '/terms/:id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, sysadmin]
     },
     async (request, reply) => {
       const queryParams = z.object({
@@ -202,7 +203,7 @@ export async function termsRoutes(fastify: FastifyInstance) {
   fastify.delete(
     '/terms/:id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, sysadmin]
     },
     async (request, reply) => {
       const queryParams = z.object({
