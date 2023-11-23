@@ -1,10 +1,11 @@
 import { FastifyInstance } from 'fastify'
-import { z } from 'zod'
+import { string, z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { readFileSync, writeFile } from 'fs'
 import { lookup } from 'mime-types'
 import { getCurrentDateTimeInBase64 } from '../helpers/datetime'
+import { sendConfirmationEmail } from '../modules/Welcome'
 
 export async function userRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -65,14 +66,17 @@ export async function userRoutes(fastify: FastifyInstance) {
           }
       }
 
-      await prisma.user.update({
+      const newUser = await prisma.user.update({
         data: {
           firstname: firstname || user.firstname,
           lastname: lastname || user.lastname,
-          email: email || user.email
+          email: email || user.email,
+          confirmedEmail: !(typeof email === 'string' && user.email !== email)
         },
         where: { id }
       })
+
+      if (!newUser.confirmedEmail) await sendConfirmationEmail(newUser)
 
       return {
         status: true
