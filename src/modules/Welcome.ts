@@ -1,6 +1,5 @@
 import { User } from '@prisma/client'
 import { sendCode } from './userCode'
-import { prisma } from '../lib/prisma'
 
 export const sendConfirmationEmail = async (user: User) => {
   const resp: any = await sendCode(
