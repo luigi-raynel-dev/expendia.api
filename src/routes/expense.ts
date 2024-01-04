@@ -199,7 +199,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
           title,
           cost,
           dueDate,
-          createdAt: expense?.createdAt,
+          createdAt: expense.createdAt,
           updatedAt
         },
         where: {
@@ -217,7 +217,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
           const expensePayer = await prisma.paying.findUnique({
             where: {
               expense_id_user_id: {
-                expense_id: expense?.id,
+                expense_id: expense.id,
                 user_id: user.id
               }
             }
@@ -230,7 +230,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
                 },
                 where: {
                   expense_id_user_id: {
-                    expense_id: expense?.id,
+                    expense_id: expense.id,
                     user_id: user.id
                   }
                 }
@@ -239,7 +239,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
               await prisma.paying.delete({
                 where: {
                   expense_id_user_id: {
-                    expense_id: expense?.id,
+                    expense_id: expense.id,
                     user_id: user.id
                   }
                 }
@@ -250,12 +250,36 @@ export async function expenseRoutes(fastify: FastifyInstance) {
               data: {
                 cost: payer.cost,
                 user_id: user.id,
-                expense_id: expense?.id,
+                expense_id: expense.id,
                 paid: false
               }
             })
           }
         }
+      })
+
+      const expensePayers = await prisma.paying.findMany({
+        where: {
+          expense_id: expense.id
+        },
+        include: {
+          paying: true
+        }
+      })
+
+      expensePayers.map(async ({ paying }) => {
+        const payerExists =
+          payers.find(({ email }) => email === paying.email) !== undefined
+
+        if (!payerExists)
+          await prisma.paying.delete({
+            where: {
+              expense_id_user_id: {
+                expense_id: expense.id,
+                user_id: paying.id
+              }
+            }
+          })
       })
 
       return reply.status(200).send({
