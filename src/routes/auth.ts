@@ -27,8 +27,21 @@ export async function authRoutes(fastify: FastifyInstance) {
     {
       onRequest: [authenticate]
     },
-    async request => {
-      return { user: request.user }
+    async (request, reply) => {
+      const { sub: user_id } = request.user
+
+      const user = await prisma.user.findUnique({
+        where: { id: user_id }
+      })
+
+      if (!user)
+        return reply.status(401).send({
+          status: false,
+          error: 'Unauthorized',
+          message: "The user doesn't exist in our database"
+        })
+
+      return { user }
     }
   )
 

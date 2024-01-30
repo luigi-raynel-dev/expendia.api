@@ -44,6 +44,12 @@ const schema = {
     },
     ANONYM_EMAIL: {
       type: 'string'
+    },
+    GOOGLE_PLAY_URL: {
+      type: 'string'
+    },
+    GOOGLE_PLAY_BADGE_URL: {
+      type: 'string'
     }
   }
 }

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { User } from '@prisma/client'
+import { inviteMember } from '../modules/invite'
 
 export async function memberRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -103,6 +104,13 @@ export async function memberRoutes(fastify: FastifyInstance) {
 
       if (!group) return reply.status(404).send()
 
+      const { sub: user_id } = request.user
+      const me = await prisma.user.findUniqueOrThrow({
+        where: {
+          id: user_id
+        }
+      })
+
       members.map(async member => {
         let user = await prisma.user.findUnique({
           where: {
@@ -124,13 +132,15 @@ export async function memberRoutes(fastify: FastifyInstance) {
           }
         })
 
-        if (!groupMember)
+        if (!groupMember) {
           await prisma.member.create({
             data: {
               group_id: group.id,
               user_id: user.id
             }
           })
+          inviteMember(me, user, group)
+        }
       })
 
       const groupMembers = await prisma.member.findMany({
