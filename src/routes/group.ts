@@ -92,7 +92,8 @@ export async function groupRoutes(fastify: FastifyInstance) {
       await prisma.member.create({
         data: {
           group_id: group.id,
-          user_id
+          user_id,
+          isAdmin: true
         }
       })
 
