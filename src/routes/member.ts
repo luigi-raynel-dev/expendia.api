@@ -83,7 +83,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
   fastify.patch(
     '/groups/:id/members',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupAdmin]
     },
     async (request, reply) => {
       const createGroupBody = z.object({
@@ -217,7 +217,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
   fastify.delete(
     '/groups/:id/members/:user_id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupAdmin]
     },
     async (request, reply) => {
       const queryParams = z.object({
