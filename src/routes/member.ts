@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { User } from '@prisma/client'
 import { inviteMember } from '../modules/invite'
+import { groupAdmin } from '../plugins/groupAdmin'
 
 export async function memberRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -163,6 +164,47 @@ export async function memberRoutes(fastify: FastifyInstance) {
               }
             }
           })
+        }
+      })
+
+      return {
+        status: true
+      }
+    }
+  )
+
+  fastify.patch(
+    '/groups/:id/members/:user_id/admin',
+    {
+      onRequest: [authenticate, groupAdmin]
+    },
+    async (request, reply) => {
+      const queryParams = z.object({
+        id: z.string().cuid(),
+        user_id: z.string().cuid()
+      })
+      const { id, user_id } = queryParams.parse(request.params)
+
+      const groupMember = await prisma.member.findUnique({
+        where: {
+          group_id_user_id: {
+            group_id: id,
+            user_id
+          }
+        }
+      })
+
+      if (!groupMember) return reply.status(404).send()
+
+      await prisma.member.update({
+        data: {
+          isAdmin: !Boolean(groupMember.isAdmin)
+        },
+        where: {
+          group_id_user_id: {
+            group_id: id,
+            user_id
+          }
         }
       })
 
