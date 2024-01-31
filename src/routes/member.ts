@@ -5,12 +5,13 @@ import { authenticate } from '../plugins/authenticate'
 import { User } from '@prisma/client'
 import { inviteMember } from '../modules/invite'
 import { groupAdmin } from '../plugins/groupAdmin'
+import { groupMember } from '../plugins/groupMember'
 
 export async function memberRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/groups/:id/members',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupMember]
     },
     async (request, reply) => {
       const queryParams = z.object({
