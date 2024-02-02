@@ -180,6 +180,12 @@ export async function memberRoutes(fastify: FastifyInstance) {
       onRequest: [authenticate, groupAdmin]
     },
     async (request, reply) => {
+      const body = z.object({
+        member_id: z.string().cuid().nullable()
+      })
+
+      const { member_id } = body.parse(request.body)
+
       const queryParams = z.object({
         id: z.string().cuid(),
         user_id: z.string().cuid()
@@ -196,6 +202,40 @@ export async function memberRoutes(fastify: FastifyInstance) {
       })
 
       if (!groupMember) return reply.status(404).send()
+
+      if (groupMember.isAdmin === true) {
+        const admins = await prisma.member.findMany({
+          where: {
+            isAdmin: true,
+            group_id: id
+          }
+        })
+
+        if (admins.length === 1) {
+          if (member_id) {
+            await prisma.member.update({
+              data: {
+                isAdmin: true
+              },
+              where: {
+                group_id_user_id: {
+                  group_id: id,
+                  user_id: member_id
+                }
+              }
+            })
+          } else {
+            await prisma.member.updateMany({
+              data: {
+                isAdmin: true
+              },
+              where: {
+                group_id: id
+              }
+            })
+          }
+        }
+      }
 
       await prisma.member.update({
         data: {
