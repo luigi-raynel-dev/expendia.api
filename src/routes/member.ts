@@ -267,19 +267,43 @@ export async function memberRoutes(fastify: FastifyInstance) {
       })
       const { id, user_id } = queryParams.parse(request.params)
 
-      const groupMember = await prisma.member.findFirst({
+      const groupMember = await prisma.member.findUnique({
         where: {
-          group_id: id,
-          user_id
+          group_id_user_id: {
+            group_id: id,
+            user_id
+          }
         }
       })
 
       if (!groupMember) return reply.status(404).send()
 
-      await prisma.member.deleteMany({
+      if (groupMember.isAdmin) {
+        const admins = await prisma.member.findMany({
+          where: {
+            group_id: id,
+            isAdmin: true
+          }
+        })
+
+        if (admins.length === 1) {
+          await prisma.member.updateMany({
+            data: {
+              isAdmin: true
+            },
+            where: {
+              group_id: id
+            }
+          })
+        }
+      }
+
+      await prisma.member.delete({
         where: {
-          group_id: id,
-          user_id
+          group_id_user_id: {
+            group_id: id,
+            user_id
+          }
         }
       })
 
