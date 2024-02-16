@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { tokenGenerator } from './auth'
+import { groupAdmin } from '../plugins/groupAdmin'
+import { groupMember } from '../plugins/groupMember'
 
 export async function groupRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -43,7 +45,7 @@ export async function groupRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/groups/:id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupMember]
     },
     async request => {
       const queryParams = z.object({
@@ -92,7 +94,8 @@ export async function groupRoutes(fastify: FastifyInstance) {
       await prisma.member.create({
         data: {
           group_id: group.id,
-          user_id
+          user_id,
+          isAdmin: true
         }
       })
 
@@ -128,7 +131,7 @@ export async function groupRoutes(fastify: FastifyInstance) {
   fastify.patch(
     '/groups/:id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupAdmin]
     },
     async (request, reply) => {
       const createGroupBody = z.object({
@@ -168,7 +171,7 @@ export async function groupRoutes(fastify: FastifyInstance) {
   fastify.delete(
     '/groups/:id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupAdmin]
     },
     async (request, reply) => {
       const queryParams = z.object({

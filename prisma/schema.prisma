@@ -51,6 +51,7 @@ model Member {
   user_id   String
   group     Group    @relation(fields: [group_id], references: [id], onDelete: Cascade)
   member    User     @relation(fields: [user_id], references: [id])
+  isAdmin   Boolean?
   createdAt DateTime @default(now())
 
   @@unique([group_id, user_id])

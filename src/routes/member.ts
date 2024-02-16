@@ -4,12 +4,14 @@ import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { User } from '@prisma/client'
 import { inviteMember } from '../modules/invite'
+import { groupAdmin } from '../plugins/groupAdmin'
+import { groupMember } from '../plugins/groupMember'
 
 export async function memberRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/groups/:id/members',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupMember]
     },
     async (request, reply) => {
       const queryParams = z.object({
@@ -82,7 +84,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
   fastify.patch(
     '/groups/:id/members',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupAdmin]
     },
     async (request, reply) => {
       const createGroupBody = z.object({
@@ -172,10 +174,91 @@ export async function memberRoutes(fastify: FastifyInstance) {
     }
   )
 
+  fastify.patch(
+    '/groups/:id/members/:user_id/admin',
+    {
+      onRequest: [authenticate, groupAdmin]
+    },
+    async (request, reply) => {
+      const body = z.object({
+        member_id: z.string().cuid().nullable()
+      })
+
+      const { member_id } = body.parse(request.body)
+
+      const queryParams = z.object({
+        id: z.string().cuid(),
+        user_id: z.string().cuid()
+      })
+      const { id, user_id } = queryParams.parse(request.params)
+
+      const groupMember = await prisma.member.findUnique({
+        where: {
+          group_id_user_id: {
+            group_id: id,
+            user_id
+          }
+        }
+      })
+
+      if (!groupMember) return reply.status(404).send()
+
+      if (groupMember.isAdmin === true) {
+        const admins = await prisma.member.findMany({
+          where: {
+            isAdmin: true,
+            group_id: id
+          }
+        })
+
+        if (admins.length === 1) {
+          if (member_id) {
+            await prisma.member.update({
+              data: {
+                isAdmin: true
+              },
+              where: {
+                group_id_user_id: {
+                  group_id: id,
+                  user_id: member_id
+                }
+              }
+            })
+          } else {
+            await prisma.member.updateMany({
+              data: {
+                isAdmin: true
+              },
+              where: {
+                group_id: id
+              }
+            })
+          }
+        }
+      }
+
+      await prisma.member.update({
+        data: {
+          isAdmin: !Boolean(groupMember.isAdmin)
+        },
+        where: {
+          group_id_user_id: {
+            group_id: id,
+            user_id
+          }
+        }
+      })
+
+      return {
+        status: true
+      }
+    }
+  )
+
   fastify.delete(
     '/groups/:id/members/:user_id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupAdmin]
     },
     async (request, reply) => {
       const queryParams = z.object({
@@ -184,19 +267,43 @@ export async function memberRoutes(fastify: FastifyInstance) {
       })
       const { id, user_id } = queryParams.parse(request.params)
 
-      const groupMember = await prisma.member.findFirst({
+      const groupMember = await prisma.member.findUnique({
         where: {
-          group_id: id,
-          user_id
+          group_id_user_id: {
+            group_id: id,
+            user_id
+          }
         }
       })
 
       if (!groupMember) return reply.status(404).send()
 
-      await prisma.member.deleteMany({
+      if (groupMember.isAdmin) {
+        const admins = await prisma.member.findMany({
+          where: {
+            group_id: id,
+            isAdmin: true
+          }
+        })
+
+        if (admins.length === 1) {
+          await prisma.member.updateMany({
+            data: {
+              isAdmin: true
+            },
+            where: {
+              group_id: id
+            }
+          })
+        }
+      }
+
+      await prisma.member.delete({
         where: {
-          group_id: id,
-          user_id
+          group_id_user_id: {
+            group_id: id,
+            user_id
+          }
         }
       })
 

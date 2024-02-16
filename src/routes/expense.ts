@@ -3,12 +3,13 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import dayjs from 'dayjs'
+import { groupMember, groupMemberByExpense } from '../plugins/groupMember'
 
 export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/groups/:id/expenses',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupMember]
     },
     async (request, reply) => {
       const getDayParams = z.object({
@@ -59,7 +60,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/expenses/:id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupMemberByExpense]
     },
     async (request, reply) => {
       const queryParams = z.object({
@@ -88,7 +89,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/groups/:id/expenses',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupMember]
     },
     async (request, reply) => {
       const createGroupBody = z.object({
@@ -160,7 +161,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.put(
     '/expenses/:id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupMemberByExpense]
     },
     async (request, reply) => {
       const createGroupBody = z.object({
@@ -293,7 +294,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.patch(
     '/expenses/:id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupMemberByExpense]
     },
     async (request, reply) => {
       const createGroupBody = z.object({
@@ -343,7 +344,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.delete(
     '/expenses/:id',
     {
-      onRequest: [authenticate]
+      onRequest: [authenticate, groupMemberByExpense]
     },
     async (request, reply) => {
       const queryParams = z.object({
