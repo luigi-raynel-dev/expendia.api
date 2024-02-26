@@ -141,7 +141,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
               user_id: user.id
             }
           })
-          inviteMember(me, user, group)
+          await inviteMember(me, user, group)
         }
       })
 
