@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import dayjs from 'dayjs'
 import { groupMember, groupMemberByExpense } from '../plugins/groupMember'
+import { sendFcmMessage } from '../lib/fcm'
 
 export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -67,6 +68,8 @@ export async function expenseRoutes(fastify: FastifyInstance) {
         id: z.string().cuid()
       })
       const { id } = queryParams.parse(request.params)
+
+      await sendFcmMessage()
 
       const expense = await prisma.expense.findUnique({
         where: {

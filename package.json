@@ -30,6 +30,7 @@
     "dotenv": "^16.0.3",
     "fastify": "^4.13.0",
     "fs": "^0.0.1-security",
+    "googleapis": "^133.0.0",
     "mime-types": "^2.1.35",
     "nodemailer": "^6.9.2",
     "randomatic": "^3.1.1",
