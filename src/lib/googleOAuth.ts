@@ -1,9 +1,13 @@
+import path from 'path'
 import { google } from 'googleapis'
 
+const staticDir = path.join(__dirname, '..', 'static')
+const serviceAccountPath = path.join(staticDir, 'serviceAccount.json')
+
 export const getAccessToken = async (scopes: string[]) => {
-  const credentials = require(__dirname + '/serviceAccount.json')
+  const credentials = require(serviceAccountPath)
   const jwtClient = new google.auth.JWT({
-    keyFile: __dirname + '/serviceAccount.json',
+    keyFile: serviceAccountPath,
     credentials,
     scopes
   })

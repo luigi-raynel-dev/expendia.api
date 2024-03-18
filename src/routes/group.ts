@@ -5,6 +5,8 @@ import { authenticate } from '../plugins/authenticate'
 import { tokenGenerator } from './auth'
 import { groupAdmin } from '../plugins/groupAdmin'
 import { groupMember } from '../plugins/groupMember'
+import { inviteMember } from '../modules/invite'
+import { sendPushNotification } from '../modules/pushNotification'
 
 export async function groupRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -84,6 +86,12 @@ export async function groupRoutes(fastify: FastifyInstance) {
       const { title, members } = createGroupBody.parse(request.body)
 
       const { sub: user_id } = request.user
+      const me = await prisma.user.findUniqueOrThrow({
+        where: {
+          id: user_id
+        }
+      })
+
       const group = await prisma.group.create({
         data: {
           title,
@@ -119,6 +127,21 @@ export async function groupRoutes(fastify: FastifyInstance) {
             user_id: user.id
           }
         })
+
+        if (user.id !== me.id) {
+          await inviteMember(me, user, group)
+          if (user.password || user.googleId)
+            await sendPushNotification(user.id, {
+              data: {
+                notificationTopic: 'NEW_GROUP',
+                groupId: group.id
+              },
+              notification: {
+                title: 'Você faz parte de um novo grupo',
+                body: `${me.firstname} te adicionou ao grupo: ${group.title}</strong> para dividir as despesas com ele.`
+              }
+            })
+        }
       })
 
       return reply.status(201).send({

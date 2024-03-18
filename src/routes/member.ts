@@ -6,6 +6,7 @@ import { User } from '@prisma/client'
 import { inviteMember } from '../modules/invite'
 import { groupAdmin } from '../plugins/groupAdmin'
 import { groupMember } from '../plugins/groupMember'
+import { sendPushNotification } from '../modules/pushNotification'
 
 export async function memberRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -142,6 +143,17 @@ export async function memberRoutes(fastify: FastifyInstance) {
             }
           })
           await inviteMember(me, user, group)
+          if (user.password || user.googleId)
+            await sendPushNotification(user.id, {
+              data: {
+                notificationTopic: 'NEW_GROUP',
+                groupId: group.id
+              },
+              notification: {
+                title: 'Você faz parte de um novo grupo',
+                body: `${me.firstname} te adicionou ao grupo: ${group.title}</strong> para dividir as despesas com ele.`
+              }
+            })
         }
       })
 
