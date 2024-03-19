@@ -3,10 +3,9 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { User } from '@prisma/client'
-import { inviteMember } from '../modules/invite'
 import { groupAdmin } from '../plugins/groupAdmin'
 import { groupMember } from '../plugins/groupMember'
-import { sendPushNotification } from '../modules/pushNotification'
+import { newGroupNotification } from '../modules/groupMember'
 
 export async function memberRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -142,18 +141,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
               user_id: user.id
             }
           })
-          await inviteMember(me, user, group)
-          if (user.password || user.googleId)
-            await sendPushNotification(user.id, {
-              data: {
-                notificationTopic: 'NEW_GROUP',
-                groupId: group.id
-              },
-              notification: {
-                title: 'Você faz parte de um novo grupo',
-                body: `${me.firstname} te adicionou ao grupo: ${group.title}</strong> para dividir as despesas com ele.`
-              }
-            })
+          await newGroupNotification(me, user, group)
         }
       })
 

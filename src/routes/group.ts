@@ -5,8 +5,7 @@ import { authenticate } from '../plugins/authenticate'
 import { tokenGenerator } from './auth'
 import { groupAdmin } from '../plugins/groupAdmin'
 import { groupMember } from '../plugins/groupMember'
-import { inviteMember } from '../modules/invite'
-import { sendPushNotification } from '../modules/pushNotification'
+import { newGroupNotification } from '../modules/groupMember'
 
 export async function groupRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -128,20 +127,7 @@ export async function groupRoutes(fastify: FastifyInstance) {
           }
         })
 
-        if (user.id !== me.id) {
-          await inviteMember(me, user, group)
-          if (user.password || user.googleId)
-            await sendPushNotification(user.id, {
-              data: {
-                notificationTopic: 'NEW_GROUP',
-                groupId: group.id
-              },
-              notification: {
-                title: 'Você faz parte de um novo grupo',
-                body: `${me.firstname} te adicionou ao grupo: ${group.title}</strong> para dividir as despesas com ele.`
-              }
-            })
-        }
+        await newGroupNotification(me, user, group)
       })
 
       return reply.status(201).send({

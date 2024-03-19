@@ -4,7 +4,7 @@ import { sendMail } from '../lib/nodemailer'
 import { emailTemplate } from '../lib/emailTemplate'
 
 export const inviteMember = async (from: User, to: User, group: Group) => {
-  const title = `${from.firstname} te convidou para o grupo: ${group.title}`
+  const title = `${from.firstname} te adicionou ao grupo: ${group.title}`
 
   const resp: any = await sendMail({
     to: to.email,
@@ -14,7 +14,7 @@ export const inviteMember = async (from: User, to: User, group: Group) => {
       to.firstname || 'novo usuário',
       `
       <p>
-        Você recebeu um convite para dividir as despesas no grupo <strong>${group.title}</strong> com <strong>${from.firstname}</strong>.
+        Você foi adicionado por <strong>${from.firstname}</strong> ao grupo <strong>${group.title}</strong> para dividir as despesas.
       </p>
       <p>
         Pronto para dividir as despesas com o grupo?
