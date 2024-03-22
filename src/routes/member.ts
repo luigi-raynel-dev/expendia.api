@@ -5,7 +5,7 @@ import { authenticate } from '../plugins/authenticate'
 import { User } from '@prisma/client'
 import { groupAdmin } from '../plugins/groupAdmin'
 import { groupMember } from '../plugins/groupMember'
-import { newGroupNotification } from '../modules/groupMember'
+import { newGroupNotification } from '../modules/notifications'
 
 export async function memberRoutes(fastify: FastifyInstance) {
   fastify.get(

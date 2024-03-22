@@ -5,7 +5,7 @@ import { authenticate } from '../plugins/authenticate'
 import { tokenGenerator } from './auth'
 import { groupAdmin } from '../plugins/groupAdmin'
 import { groupMember } from '../plugins/groupMember'
-import { newGroupNotification } from '../modules/groupMember'
+import { newGroupNotification } from '../modules/notifications'
 
 export async function groupRoutes(fastify: FastifyInstance) {
   fastify.get(

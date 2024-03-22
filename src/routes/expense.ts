@@ -4,7 +4,11 @@ import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import dayjs from 'dayjs'
 import { groupMember, groupMemberByExpense } from '../plugins/groupMember'
-import { sendFcmMessage } from '../lib/fcm'
+import {
+  convertFloatToMoney,
+  getFormatedDaysToExpire
+} from '../modules/expense'
+import { newExpenseNotification } from '../modules/notifications'
 
 export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -69,8 +73,6 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       })
       const { id } = queryParams.parse(request.params)
 
-      await sendFcmMessage()
-
       const expense = await prisma.expense.findUnique({
         where: {
           id
@@ -117,6 +119,9 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       const { id } = queryParams.parse(request.params)
 
       const { sub: user_id } = request.user
+      const me = await prisma.user.findUniqueOrThrow({
+        where: { id: user_id }
+      })
 
       const group = await prisma.group.findUnique({
         where: {
@@ -143,7 +148,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
           }
         })
         if (user) {
-          await prisma.paying.create({
+          const paying = await prisma.paying.create({
             data: {
               user_id: user.id,
               cost: payer.cost,
@@ -151,6 +156,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
               paid: false
             }
           })
+          await newExpenseNotification(me, user, paying, expense)
         }
       })
 
@@ -195,6 +201,11 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       })
 
       if (!expense) return reply.status(404).send()
+
+      const { sub: user_id } = request.user
+      const me = await prisma.user.findUniqueOrThrow({
+        where: { id: user_id }
+      })
 
       const updatedAt = dayjs().format()
 
@@ -250,7 +261,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
               })
             }
           } else {
-            await prisma.paying.create({
+            const paying = await prisma.paying.create({
               data: {
                 cost: payer.cost,
                 user_id: user.id,
@@ -258,6 +269,8 @@ export async function expenseRoutes(fastify: FastifyInstance) {
                 paid: false
               }
             })
+
+            await newExpenseNotification(me, user, paying, expense)
           }
         }
       })
