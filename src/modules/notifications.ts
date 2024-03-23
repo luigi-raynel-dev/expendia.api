@@ -1,11 +1,7 @@
 import { Expense, Group, Paying, User } from '@prisma/client'
 import { inviteMember } from './invite'
 import { sendPushNotification } from './pushNotification'
-import {
-  convertFloatToMoney,
-  getDaysToExpire,
-  getFormatedDaysToExpire
-} from './expense'
+import { convertFloatToMoney, getFormatedDaysToExpire } from './expense'
 
 export const newGroupNotification = async (
   me: User,
@@ -54,4 +50,44 @@ export const newExpenseNotification = async (
         }
       })
   }
+}
+
+export const fullyPaidExpenseNotification = async (
+  user: User,
+  expense: Expense
+) => {
+  if (user.password || user.googleId)
+    await sendPushNotification(user.id, {
+      data: {
+        notificationTopic: 'FULLY_PAID',
+        groupId: expense.group_id,
+        expenseId: expense.id
+      },
+      notification: {
+        title: 'A despesa foi totalmente paga',
+        body: `A despesa: ${expense.title}, foi totalmente paga por todos.`
+      }
+    })
+}
+
+export const expensePaymentNotification = async (
+  me: User,
+  user: User,
+  to: User,
+  expense: Expense
+) => {
+  if (to.password || to.googleId)
+    await sendPushNotification(to.id, {
+      data: {
+        notificationTopic: 'FULLY_PAID',
+        groupId: expense.group_id,
+        expenseId: expense.id
+      },
+      notification: {
+        title: `${user.firstname || 'Um usuário'} pagou uma despesa`,
+        body: `${user.firstname || 'Um usuário'} pagou a despesa: ${
+          expense.title
+        }${me.id !== user.id ? `, ${me.firstname} marcou o pagamento` : ''}.`
+      }
+    })
 }

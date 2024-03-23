@@ -8,7 +8,11 @@ import {
   convertFloatToMoney,
   getFormatedDaysToExpire
 } from '../modules/expense'
-import { newExpenseNotification } from '../modules/notifications'
+import {
+  expensePaymentNotification,
+  fullyPaidExpenseNotification,
+  newExpenseNotification
+} from '../modules/notifications'
 
 export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -321,6 +325,11 @@ export async function expenseRoutes(fastify: FastifyInstance) {
 
       const { paid, paidAt, email } = createGroupBody.parse(request.body)
 
+      const { sub: user_id } = request.user
+      const me = await prisma.user.findUniqueOrThrow({
+        where: { id: user_id }
+      })
+
       const queryParams = z.object({
         id: z.string().cuid()
       })
@@ -334,7 +343,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
 
       if (!expense) return reply.status(404).send()
 
-      const user = await prisma.user.findUnique({
+      const user = await prisma.user.findUniqueOrThrow({
         where: { email }
       })
 
@@ -346,13 +355,34 @@ export async function expenseRoutes(fastify: FastifyInstance) {
         where: {
           expense_id_user_id: {
             expense_id: id,
-            user_id: user!.id
+            user_id: user.id
           }
         }
       })
 
+      const paying = await prisma.paying.findMany({
+        where: { expense_id: id },
+        include: {
+          paying: true
+        }
+      })
+
+      if (paying.filter(({ paid }) => paid === false).length === 0) {
+        paying.map(async payer => {
+          if (payer.paying.id !== me.id)
+            await fullyPaidExpenseNotification(payer.paying, expense)
+        })
+      } else if (paid) {
+        paying.map(async payer => {
+          if (payer.paying.id !== me.id)
+            await expensePaymentNotification(me, user, payer.paying, expense)
+        })
+      }
+
       return reply.status(200).send({
-        status: true
+        status: true,
+        paying,
+        user_id
       })
     }
   )
