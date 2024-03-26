@@ -2,6 +2,8 @@ import { Expense, Group, Paying, User } from '@prisma/client'
 import { inviteMember } from './invite'
 import { sendPushNotification } from './pushNotification'
 import { convertFloatToMoney, getFormatedDaysToExpire } from './expense'
+import { prisma } from '../lib/prisma'
+import dayjs from 'dayjs'
 
 export const newGroupNotification = async (
   me: User,
@@ -90,4 +92,48 @@ export const expensePaymentNotification = async (
         }${me.id !== user.id ? `, ${me.firstname} marcou o pagamento` : ''}.`
       }
     })
+}
+
+export const expensesExpirationNotification = async () => {
+  const tomorrow = dayjs().add(1, 'day').toISOString()
+  const aWeekAgo = dayjs().subtract(7, 'day').toISOString()
+
+  const expenses = await prisma.expense.findMany({
+    where: {
+      dueDate: {
+        gte: tomorrow,
+        lt: aWeekAgo
+      }
+    },
+    include: {
+      Paying: {
+        include: {
+          paying: true
+        }
+      }
+    },
+    orderBy: {
+      dueDate: 'asc'
+    }
+  })
+
+  expenses.map(expense => {
+    expense.Paying.map(async member => {
+      if (!member.paid && (member.paying.password || member.paying.googleId)) {
+        await sendPushNotification(member.paying.id, {
+          data: {
+            notificationTopic: 'EXPENSE_EXPIRATION',
+            groupId: expense.group_id,
+            expenseId: expense.id
+          },
+          notification: {
+            title: `A despesa ${getFormatedDaysToExpire(expense.dueDate)}`,
+            body: `A despesa: ${expense.title} ${getFormatedDaysToExpire(
+              expense.dueDate
+            )}.`
+          }
+        })
+      }
+    })
+  })
 }

@@ -380,9 +380,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       }
 
       return reply.status(200).send({
-        status: true,
-        paying,
-        user_id
+        status: true
       })
     }
   )
