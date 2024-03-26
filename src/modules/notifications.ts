@@ -95,14 +95,14 @@ export const expensePaymentNotification = async (
 }
 
 export const expensesExpirationNotification = async () => {
-  const tomorrow = dayjs().add(1, 'day').toISOString()
-  const aWeekAgo = dayjs().subtract(7, 'day').toISOString()
+  const aWeekAgo = dayjs().subtract(7, 'day').startOf('day').toDate()
+  const tomorrow = dayjs().add(1, 'day').endOf('day').toDate()
 
   const expenses = await prisma.expense.findMany({
     where: {
       dueDate: {
-        gte: tomorrow,
-        lt: aWeekAgo
+        gte: aWeekAgo,
+        lt: tomorrow
       }
     },
     include: {

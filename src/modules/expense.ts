@@ -13,7 +13,7 @@ export const getDaysToExpire = (dueDate: Date) => {
   const today = dayjs().startOf('day')
   const dueDateDay = dayjs(dueDate).startOf('day')
 
-  return dueDateDay.diff(today, 'day') + 1
+  return dueDateDay.diff(today, 'day')
 }
 
 export const getFormatedDaysToExpire = (

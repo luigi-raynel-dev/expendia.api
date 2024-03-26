@@ -2,7 +2,6 @@ import { expensesAboutToExpire } from './expenseJobs'
 
 export const schedule = {
   run: async () => {
-    // await expensesAboutToExpire('0 6-12 * * *')
-    await expensesAboutToExpire('* * * * *')
+    await expensesAboutToExpire('0 6-12 * * *')
   }
 }
