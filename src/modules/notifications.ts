@@ -4,6 +4,7 @@ import { sendPushNotification } from './pushNotification'
 import { convertFloatToMoney, getFormatedDaysToExpire } from './expense'
 import { prisma } from '../lib/prisma'
 import dayjs from 'dayjs'
+import { getDatesByDaysDiffs } from './date'
 
 export const newGroupNotification = async (
   me: User,
@@ -94,15 +95,11 @@ export const expensePaymentNotification = async (
     })
 }
 
-export const expensesExpirationNotification = async () => {
-  const aWeekAgo = dayjs().subtract(7, 'day').startOf('day').toDate()
-  const tomorrow = dayjs().add(1, 'day').endOf('day').toDate()
-
+export const expensesExpirationNotification = async (diffs: number[]) => {
   const expenses = await prisma.expense.findMany({
     where: {
       dueDate: {
-        gte: aWeekAgo,
-        lt: tomorrow
+        in: getDatesByDaysDiffs(diffs)
       }
     },
     include: {
