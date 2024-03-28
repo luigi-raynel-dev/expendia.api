@@ -3,9 +3,9 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { User } from '@prisma/client'
-import { inviteMember } from '../modules/invite'
 import { groupAdmin } from '../plugins/groupAdmin'
 import { groupMember } from '../plugins/groupMember'
+import { newGroupNotification } from '../modules/notifications'
 
 export async function memberRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -141,7 +141,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
               user_id: user.id
             }
           })
-          await inviteMember(me, user, group)
+          await newGroupNotification(me, user, group)
         }
       })
 

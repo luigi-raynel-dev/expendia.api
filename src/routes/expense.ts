@@ -4,6 +4,15 @@ import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import dayjs from 'dayjs'
 import { groupMember, groupMemberByExpense } from '../plugins/groupMember'
+import {
+  convertFloatToMoney,
+  getFormatedDaysToExpire
+} from '../modules/expense'
+import {
+  expensePaymentNotification,
+  fullyPaidExpenseNotification,
+  newExpenseNotification
+} from '../modules/notifications'
 
 export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -114,6 +123,9 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       const { id } = queryParams.parse(request.params)
 
       const { sub: user_id } = request.user
+      const me = await prisma.user.findUniqueOrThrow({
+        where: { id: user_id }
+      })
 
       const group = await prisma.group.findUnique({
         where: {
@@ -140,7 +152,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
           }
         })
         if (user) {
-          await prisma.paying.create({
+          const paying = await prisma.paying.create({
             data: {
               user_id: user.id,
               cost: payer.cost,
@@ -148,6 +160,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
               paid: false
             }
           })
+          await newExpenseNotification(me, user, paying, expense)
         }
       })
 
@@ -192,6 +205,11 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       })
 
       if (!expense) return reply.status(404).send()
+
+      const { sub: user_id } = request.user
+      const me = await prisma.user.findUniqueOrThrow({
+        where: { id: user_id }
+      })
 
       const updatedAt = dayjs().format()
 
@@ -247,7 +265,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
               })
             }
           } else {
-            await prisma.paying.create({
+            const paying = await prisma.paying.create({
               data: {
                 cost: payer.cost,
                 user_id: user.id,
@@ -255,6 +273,8 @@ export async function expenseRoutes(fastify: FastifyInstance) {
                 paid: false
               }
             })
+
+            await newExpenseNotification(me, user, paying, expense)
           }
         }
       })
@@ -305,6 +325,11 @@ export async function expenseRoutes(fastify: FastifyInstance) {
 
       const { paid, paidAt, email } = createGroupBody.parse(request.body)
 
+      const { sub: user_id } = request.user
+      const me = await prisma.user.findUniqueOrThrow({
+        where: { id: user_id }
+      })
+
       const queryParams = z.object({
         id: z.string().cuid()
       })
@@ -318,7 +343,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
 
       if (!expense) return reply.status(404).send()
 
-      const user = await prisma.user.findUnique({
+      const user = await prisma.user.findUniqueOrThrow({
         where: { email }
       })
 
@@ -330,10 +355,29 @@ export async function expenseRoutes(fastify: FastifyInstance) {
         where: {
           expense_id_user_id: {
             expense_id: id,
-            user_id: user!.id
+            user_id: user.id
           }
         }
       })
+
+      const paying = await prisma.paying.findMany({
+        where: { expense_id: id },
+        include: {
+          paying: true
+        }
+      })
+
+      if (paying.filter(({ paid }) => paid === false).length === 0) {
+        paying.map(async payer => {
+          if (payer.paying.id !== me.id)
+            await fullyPaidExpenseNotification(payer.paying, expense)
+        })
+      } else if (paid) {
+        paying.map(async payer => {
+          if (payer.paying.id !== me.id)
+            await expensePaymentNotification(me, user, payer.paying, expense)
+        })
+      }
 
       return reply.status(200).send({
         status: true

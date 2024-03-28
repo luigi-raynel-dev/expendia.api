@@ -9,3 +9,6 @@ dist
 # uploads
 uploads/avatars/*
 !uploads/avatars/.gitkeep
+
+# Google
+src/static/serviceAccount.json

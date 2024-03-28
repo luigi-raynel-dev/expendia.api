@@ -15,24 +15,25 @@ generator erd {
 }
 
 model User {
-  id             String     @id @default(cuid())
-  firstname      String?
-  lastname       String?
-  email          String     @unique
-  confirmedEmail Boolean?
-  password       String?
-  googleId       String?    @unique
-  avatarBase64   String?    @db.LongText
-  avatarUri      String?
-  isAdmin        Boolean?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @default(now())
-  Group          Group[]
-  Member         Member[]
-  Expense        Expense[]
-  Paying         Paying[]
-  UserCode       UserCode[]
-  UserTerm       UserTerm[]
+  id                String              @id @default(cuid())
+  firstname         String?
+  lastname          String?
+  email             String              @unique
+  confirmedEmail    Boolean?
+  password          String?
+  googleId          String?             @unique
+  avatarBase64      String?             @db.LongText
+  avatarUri         String?
+  isAdmin           Boolean?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @default(now())
+  Group             Group[]
+  Member            Member[]
+  Expense           Expense[]
+  Paying            Paying[]
+  UserCode          UserCode[]
+  UserTerm          UserTerm[]
+  NotificationToken NotificationToken[]
 }
 
 model Group {
@@ -126,4 +127,14 @@ model UserTerm {
   term Term @relation(fields: [term_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, term_id])
+}
+
+model NotificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  user_id   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }

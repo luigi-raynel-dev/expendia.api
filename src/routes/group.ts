@@ -5,6 +5,7 @@ import { authenticate } from '../plugins/authenticate'
 import { tokenGenerator } from './auth'
 import { groupAdmin } from '../plugins/groupAdmin'
 import { groupMember } from '../plugins/groupMember'
+import { newGroupNotification } from '../modules/notifications'
 
 export async function groupRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -84,6 +85,12 @@ export async function groupRoutes(fastify: FastifyInstance) {
       const { title, members } = createGroupBody.parse(request.body)
 
       const { sub: user_id } = request.user
+      const me = await prisma.user.findUniqueOrThrow({
+        where: {
+          id: user_id
+        }
+      })
+
       const group = await prisma.group.create({
         data: {
           title,
@@ -119,6 +126,8 @@ export async function groupRoutes(fastify: FastifyInstance) {
             user_id: user.id
           }
         })
+
+        await newGroupNotification(me, user, group)
       })
 
       return reply.status(201).send({
