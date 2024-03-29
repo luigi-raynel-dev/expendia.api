@@ -82,7 +82,7 @@ export const expensePaymentNotification = async (
   if (to.password || to.googleId)
     await sendPushNotification(to.id, {
       data: {
-        notificationTopic: 'FULLY_PAID',
+        notificationTopic: 'USER_PAID',
         groupId: expense.group_id,
         expenseId: expense.id
       },

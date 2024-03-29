@@ -3,6 +3,6 @@ import { expensesExpirationNotification } from '../modules/notifications'
 
 export const expensesAboutToExpire = async (cronExpression: string) => {
   cron.schedule(cronExpression, async () => {
-    await expensesExpirationNotification([-5, -1, 0, 1, 5])
+    await expensesExpirationNotification([5, 1, 0, -1, -5])
   })
 }
