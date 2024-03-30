@@ -1,7 +1,11 @@
 import path from 'path'
 import { google } from 'googleapis'
 
-const staticDir = path.join(__dirname, '..', 'static')
+const staticDir = path.join(
+  __dirname,
+  process.env.NODE_ENV === 'production' ? '' : '..',
+  'static'
+)
 const serviceAccountPath = path.join(staticDir, 'serviceAccount.json')
 
 export const getAccessToken = async (scopes: string[]) => {

@@ -23,6 +23,9 @@ const schema = {
     'SMTP_AUTH_PASS'
   ],
   properties: {
+    NODE_ENV: {
+      type: 'string'
+    },
     JWT_KEY: {
       type: 'string'
     },
