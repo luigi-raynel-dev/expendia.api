@@ -1,3 +1,4 @@
+import { getLogger } from '../logs/logger'
 import { getAccessToken } from './googleOAuth'
 
 const expoUsername = process.env.EXPO_USERNAME || ''
@@ -21,10 +22,11 @@ export interface SendFcmMessagePayload extends FcmMessageProps {
   token: string
 }
 
+const logger = getLogger('fcm')
+
 export const sendFcmMessage = async (payload: SendFcmMessagePayload) => {
   const accessToken = await getAccessToken(fmcScopes)
 
-  console.log(accessToken)
   const options = {
     method: 'POST',
     headers: {
@@ -46,8 +48,9 @@ export const sendFcmMessage = async (payload: SendFcmMessagePayload) => {
   try {
     const response = await fetch(process.env.FCM_SEND_URL || '', options)
     const data = await response.json()
-    console.log('Mensagem enviada com sucesso:', data)
+    logger?.info(data)
   } catch (error) {
     console.error('Erro ao enviar mensagem:', error)
+    logger?.error(error)
   }
 }

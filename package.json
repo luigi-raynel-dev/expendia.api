@@ -37,6 +37,7 @@
     "randomatic": "^3.1.1",
     "stream": "^0.0.2",
     "util": "^0.12.5",
+    "winston": "^3.13.0",
     "zod": "^3.20.6"
   },
   "devDependencies": {
