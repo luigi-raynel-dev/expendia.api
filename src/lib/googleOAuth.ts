@@ -2,11 +2,10 @@ import path from 'path'
 import { google } from 'googleapis'
 import { getLogger } from '../logs/logger'
 
-const staticDir = path.join(
-  __dirname,
-  process.env.NODE_ENV === 'production' ? '' : '..',
-  'static'
-)
+const dir =
+  process.env.NODE_ENV === 'production' ? __dirname : path.join(__dirname, '..')
+
+const staticDir = path.join(dir, 'static')
 const serviceAccountPath = path.join(staticDir, 'serviceAccount.json')
 
 const logger = getLogger('googleOAuth')

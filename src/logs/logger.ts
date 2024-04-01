@@ -2,8 +2,14 @@ import fs from 'fs'
 import path from 'path'
 import winston from 'winston'
 
+const dir =
+  process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, 'logs')
+    : __dirname
+
 export const getLogger = (logsDir: string) => {
-  if (fs.existsSync(path.join(__dirname, logsDir))) {
+  const logPath = path.join(dir, logsDir)
+  if (fs.existsSync(logPath)) {
     return winston.createLogger({
       level: 'info',
       format: winston.format.combine(
@@ -11,23 +17,23 @@ export const getLogger = (logsDir: string) => {
         winston.format.json()
       ),
       transports: [
-        new winston.transports.File({ filename: getLogFileName(logsDir) }),
+        new winston.transports.File({ filename: getLogFileName(logPath) }),
         new winston.transports.Console()
       ]
     })
-  } else console.error(`non-existent directory: ${logsDir}`)
+  } else console.error(`non-existent directory: ${logPath}`)
 }
 
 export const getLogFileName = (logsDir: string) => {
   const date = new Date()
   return path.join(
-    path.join(__dirname, logsDir),
+    logsDir,
     `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}.log`
   )
 }
 
 export const cleanOldLogs = (daysLimit = 7) => {
-  fs.readdir(__dirname, { withFileTypes: true }, (err, files) => {
+  fs.readdir(dir, { withFileTypes: true }, (err, files) => {
     if (!err) {
       files
         .filter(file => file.isDirectory())
