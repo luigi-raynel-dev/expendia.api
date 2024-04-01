@@ -1,5 +1,6 @@
 import { getLogger } from '../logs/logger'
 import { getAccessToken } from './googleOAuth'
+import fetch from 'cross-fetch'
 
 const expoUsername = process.env.EXPO_USERNAME || ''
 const expoSlug = process.env.EXPO_SLUG || ''
