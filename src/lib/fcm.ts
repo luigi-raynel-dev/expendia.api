@@ -39,6 +39,7 @@ export const sendFcmMessage = async (payload: SendFcmMessagePayload) => {
         ...payload,
         data: {
           experienceId: expoUri,
+          notificationExperienceUrl: `exp://exp.host/${expoUri}`,
           scopeKey: expoUri,
           ...payload.data
         }
