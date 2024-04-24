@@ -3,8 +3,9 @@ import { inviteMember } from './invite'
 import { sendPushNotification } from './pushNotification'
 import { convertFloatToMoney, getFormatedDaysToExpire } from './expense'
 import { prisma } from '../lib/prisma'
-import dayjs from 'dayjs'
 import { getDatesByDaysDiffs } from './date'
+
+const expoScheme = process.env.EXPO_SCHEME || ''
 
 export const newGroupNotification = async (
   me: User,
@@ -17,7 +18,8 @@ export const newGroupNotification = async (
       await sendPushNotification(user.id, {
         data: {
           notificationTopic: 'NEW_GROUP',
-          groupId: group.id
+          groupId: group.id,
+          url: `${expoScheme}group/${group.id}`
         },
         notification: {
           title: 'Você faz parte de um novo grupo',
@@ -39,7 +41,8 @@ export const newExpenseNotification = async (
         data: {
           notificationTopic: 'NEW_EXPENSE',
           groupId: expense.group_id,
-          expenseId: expense.id
+          expenseId: expense.id,
+          url: `${expoScheme}expense/${expense.id}`
         },
         notification: {
           title: 'Você foi atribuído a uma nova despesa',
@@ -64,7 +67,8 @@ export const fullyPaidExpenseNotification = async (
       data: {
         notificationTopic: 'FULLY_PAID',
         groupId: expense.group_id,
-        expenseId: expense.id
+        expenseId: expense.id,
+        url: `${expoScheme}expense/${expense.id}`
       },
       notification: {
         title: 'A despesa foi totalmente paga',
@@ -84,7 +88,8 @@ export const expensePaymentNotification = async (
       data: {
         notificationTopic: 'USER_PAID',
         groupId: expense.group_id,
-        expenseId: expense.id
+        expenseId: expense.id,
+        url: `${expoScheme}expense/${expense.id}`
       },
       notification: {
         title: `${user.firstname || 'Um usuário'} pagou uma despesa`,
@@ -121,7 +126,8 @@ export const expensesExpirationNotification = async (diffs: number[]) => {
           data: {
             notificationTopic: 'EXPENSE_EXPIRATION',
             groupId: expense.group_id,
-            expenseId: expense.id
+            expenseId: expense.id,
+            url: `${expoScheme}expense/${expense.id}`
           },
           notification: {
             title: `A despesa ${getFormatedDaysToExpire(expense.dueDate)}`,

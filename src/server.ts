@@ -20,7 +20,8 @@ const schema = {
     'GOOGLE_PROFILE_URL',
     'SMTP_HOST',
     'SMTP_AUTH_USER',
-    'SMTP_AUTH_PASS'
+    'SMTP_AUTH_PASS',
+    'EXPO_SCHEME'
   ],
   properties: {
     NODE_ENV: {
@@ -54,6 +55,9 @@ const schema = {
       type: 'string'
     },
     GOOGLE_PLAY_BADGE_URL: {
+      type: 'string'
+    },
+    EXPO_SCHEME: {
       type: 'string'
     }
   }
