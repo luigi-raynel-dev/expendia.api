@@ -9,7 +9,7 @@ export const addIsAdminFlagInGroupCreators = async () => {
       user_id: true
     }
   })
-  groups.map(async ({ id, user_id }) => {
+  for (const { id, user_id } of groups) {
     const groupCreator = await prisma.member.findUnique({
       where: {
         group_id_user_id: {
@@ -31,5 +31,5 @@ export const addIsAdminFlagInGroupCreators = async () => {
           }
         }
       })
-  })
+  }
 }
