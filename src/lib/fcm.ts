@@ -47,12 +47,19 @@ export const sendFcmMessage = async (payload: SendFcmMessagePayload) => {
     })
   }
 
+  let notificationId = null
   try {
     const response = await fetch(process.env.FCM_SEND_URL || '', options)
-    const data = await response.json()
+    const data = (await response.json()) as { name?: string }
+    if (data?.name) {
+      const segments = data.name.split('/')
+      notificationId = segments[segments.length - 1]
+    }
+
     logger?.info(data)
   } catch (error) {
     console.error('Erro ao enviar mensagem:', error)
     logger?.error(error)
   }
+  return notificationId
 }
