@@ -25,10 +25,21 @@ export const sendPushNotification = async (
 ) => {
   const userTokens = await getUserNotificationTokens(user_id)
 
-  for (const { token } of userTokens) {
-    await sendFcmMessage({
+  for (const { token, id } of userTokens) {
+    const notificationId = await sendFcmMessage({
       token,
       ...message
     })
+
+    if (notificationId) {
+      await prisma.notification.create({
+        data: {
+          notificationTokenId: id,
+          notificationId,
+          ...message.data,
+          ...message.notification
+        }
+      })
+    }
   }
 }

@@ -7,8 +7,16 @@ const expoSlug = process.env.EXPO_SLUG || ''
 const expoUri = `@${expoUsername}/${expoSlug}`
 
 const fcmScopeMessage = process.env.FCM_GOOGLE_SCOPE || ''
-export interface FcmDataProps extends Record<string, string> {
-  notificationTopic: string
+export interface FcmDataProps extends Record<string, string | undefined> {
+  topic:
+    | 'NEW_GROUP'
+    | 'NEW_EXPENSE'
+    | 'FULLY_PAID'
+    | 'USER_PAID'
+    | 'EXPENSE_EXPIRATION'
+  groupId?: string
+  expenseId?: string
+  url?: string
 }
 
 const fmcScopes = [fcmScopeMessage]

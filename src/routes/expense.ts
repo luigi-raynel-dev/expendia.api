@@ -145,7 +145,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
         }
       })
 
-      payers.map(async payer => {
+      for (const payer of payers) {
         const user = await prisma.user.findUnique({
           where: {
             email: payer.email
@@ -162,7 +162,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
           })
           await newExpenseNotification(me, user, paying, expense)
         }
-      })
+      }
 
       return reply.status(201).send({
         status: true,
@@ -225,8 +225,8 @@ export async function expenseRoutes(fastify: FastifyInstance) {
           id
         }
       })
-      const olds: any[] = []
-      payers.map(async payer => {
+
+      for (const payer of payers) {
         const user = await prisma.user.findUnique({
           where: {
             email: payer.email
@@ -277,7 +277,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
             await newExpenseNotification(me, user, paying, expense)
           }
         }
-      })
+      }
 
       const expensePayers = await prisma.paying.findMany({
         where: {
@@ -288,7 +288,7 @@ export async function expenseRoutes(fastify: FastifyInstance) {
         }
       })
 
-      expensePayers.map(async ({ paying }) => {
+      for (const { paying } of expensePayers) {
         const payerExists =
           payers.find(({ email }) => email === paying.email) !== undefined
 
@@ -301,11 +301,10 @@ export async function expenseRoutes(fastify: FastifyInstance) {
               }
             }
           })
-      })
+      }
 
       return reply.status(200).send({
         status: true,
-        olds,
         payers
       })
     }
@@ -368,15 +367,15 @@ export async function expenseRoutes(fastify: FastifyInstance) {
       })
 
       if (paying.filter(({ paid }) => paid === false).length === 0) {
-        paying.map(async payer => {
+        for (const payer of paying) {
           if (payer.paying.id !== me.id)
             await fullyPaidExpenseNotification(payer.paying, expense)
-        })
+        }
       } else if (paid) {
-        paying.map(async payer => {
+        for (const payer of paying) {
           if (payer.paying.id !== me.id)
             await expensePaymentNotification(me, user, payer.paying, expense)
-        })
+        }
       }
 
       return reply.status(200).send({

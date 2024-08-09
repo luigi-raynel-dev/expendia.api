@@ -106,7 +106,7 @@ export async function groupRoutes(fastify: FastifyInstance) {
         }
       })
 
-      members.map(async member => {
+      for (const member of members) {
         let user = await prisma.user.findUnique({
           where: {
             email: member
@@ -128,7 +128,7 @@ export async function groupRoutes(fastify: FastifyInstance) {
         })
 
         await newGroupNotification(me, user, group)
-      })
+      }
 
       return reply.status(201).send({
         status: true,
