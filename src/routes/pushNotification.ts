@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../plugins/authenticate'
 import { sysadmin } from '../plugins/sysadmin'
+import dayjs from 'dayjs'
 
 export async function pushNotificationRoutes(fastify: FastifyInstance) {
   fastify.post(
@@ -78,6 +79,31 @@ export async function pushNotificationRoutes(fastify: FastifyInstance) {
       return reply.send({
         status: true,
         notification
+      })
+    }
+  )
+
+  fastify.post(
+    '/clearOldNotifications',
+    {
+      onRequest: [authenticate, sysadmin]
+    },
+    async (request, reply) => {
+      const bodyScheme = z.object({
+        daysAmountToDelete: z.number()
+      })
+
+      const { daysAmountToDelete } = bodyScheme.parse(request.body)
+      await prisma.notification.deleteMany({
+        where: {
+          createdAt: {
+            lt: dayjs().subtract(daysAmountToDelete, 'days').toDate()
+          }
+        }
+      })
+
+      return reply.send({
+        status: true
       })
     }
   )
