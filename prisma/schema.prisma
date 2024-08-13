@@ -27,7 +27,6 @@ model User {
   isAdmin           Boolean?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @default(now())
-  loggedIn          DateTime?
   Group             Group[]
   Member            Member[]
   Expense           Expense[]
