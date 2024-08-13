@@ -18,11 +18,11 @@ export const createCodeRequestTypes = async () => {
     }
   ]
 
-  codeRequestTypes.map(async data => {
+  for (const data of codeRequestTypes) {
     const type = await prisma.codeRequestType.findUnique({
       where: { slug: data.slug }
     })
 
     if (!type) await prisma.codeRequestType.create({ data })
-  })
+  }
 }

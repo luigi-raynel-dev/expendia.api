@@ -17,7 +17,7 @@ export const newGroupNotification = async (
     if (user.password || user.googleId)
       await sendPushNotification(user.id, {
         data: {
-          notificationTopic: 'NEW_GROUP',
+          topic: 'NEW_GROUP',
           groupId: group.id,
           url: `${expoScheme}group/${group.id}`
         },
@@ -39,7 +39,7 @@ export const newExpenseNotification = async (
     if (user.password || user.googleId)
       await sendPushNotification(user.id, {
         data: {
-          notificationTopic: 'NEW_EXPENSE',
+          topic: 'NEW_EXPENSE',
           groupId: expense.group_id,
           expenseId: expense.id,
           url: `${expoScheme}expense/${expense.id}`
@@ -65,7 +65,7 @@ export const fullyPaidExpenseNotification = async (
   if (user.password || user.googleId)
     await sendPushNotification(user.id, {
       data: {
-        notificationTopic: 'FULLY_PAID',
+        topic: 'FULLY_PAID',
         groupId: expense.group_id,
         expenseId: expense.id,
         url: `${expoScheme}expense/${expense.id}`
@@ -86,7 +86,7 @@ export const expensePaymentNotification = async (
   if (to.password || to.googleId)
     await sendPushNotification(to.id, {
       data: {
-        notificationTopic: 'USER_PAID',
+        topic: 'USER_PAID',
         groupId: expense.group_id,
         expenseId: expense.id,
         url: `${expoScheme}expense/${expense.id}`
@@ -119,12 +119,12 @@ export const expensesExpirationNotification = async (diffs: number[]) => {
     }
   })
 
-  expenses.map(expense => {
-    expense.Paying.map(async member => {
+  for (const expense of expenses) {
+    for (const member of expense.Paying) {
       if (!member.paid && (member.paying.password || member.paying.googleId)) {
         await sendPushNotification(member.paying.id, {
           data: {
-            notificationTopic: 'EXPENSE_EXPIRATION',
+            topic: 'EXPENSE_EXPIRATION',
             groupId: expense.group_id,
             expenseId: expense.id,
             url: `${expoScheme}expense/${expense.id}`
@@ -137,6 +137,6 @@ export const expensesExpirationNotification = async (diffs: number[]) => {
           }
         })
       }
-    })
-  })
+    }
+  }
 }

@@ -406,7 +406,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         }
       })
 
-      groupsManagedByMe.map(async ({ group_id }) => {
+      for (const { group_id } of groupsManagedByMe) {
         const groupAdmins = await prisma.member.findMany({
           where: {
             isAdmin: true,
@@ -422,7 +422,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             where: { group_id }
           })
         }
-      })
+      }
 
       return {
         status: true

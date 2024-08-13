@@ -7,8 +7,16 @@ const expoSlug = process.env.EXPO_SLUG || ''
 const expoUri = `@${expoUsername}/${expoSlug}`
 
 const fcmScopeMessage = process.env.FCM_GOOGLE_SCOPE || ''
-export interface FcmDataProps extends Record<string, string> {
-  notificationTopic: string
+export interface FcmDataProps extends Record<string, string | undefined> {
+  topic:
+    | 'NEW_GROUP'
+    | 'NEW_EXPENSE'
+    | 'FULLY_PAID'
+    | 'USER_PAID'
+    | 'EXPENSE_EXPIRATION'
+  groupId?: string
+  expenseId?: string
+  url?: string
 }
 
 const fmcScopes = [fcmScopeMessage]
@@ -47,12 +55,19 @@ export const sendFcmMessage = async (payload: SendFcmMessagePayload) => {
     })
   }
 
+  let notificationId = null
   try {
     const response = await fetch(process.env.FCM_SEND_URL || '', options)
-    const data = await response.json()
+    const data = (await response.json()) as { name?: string }
+    if (data?.name) {
+      const segments = data.name.split('/')
+      notificationId = segments[segments.length - 1]
+    }
+
     logger?.info(data)
   } catch (error) {
     console.error('Erro ao enviar mensagem:', error)
     logger?.error(error)
   }
+  return notificationId
 }

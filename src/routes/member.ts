@@ -113,7 +113,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
         }
       })
 
-      members.map(async member => {
+      for (const member of members) {
         let user = await prisma.user.findUnique({
           where: {
             email: member
@@ -143,7 +143,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
           })
           await newGroupNotification(me, user, group)
         }
-      })
+      }
 
       const groupMembers = await prisma.member.findMany({
         where: {
@@ -154,7 +154,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
         }
       })
 
-      groupMembers.map(async groupMember => {
+      for (const groupMember of groupMembers) {
         const memberExists = members.includes(groupMember.member.email)
         if (!memberExists) {
           await prisma.member.delete({
@@ -166,7 +166,7 @@ export async function memberRoutes(fastify: FastifyInstance) {
             }
           })
         }
-      })
+      }
 
       return {
         status: true

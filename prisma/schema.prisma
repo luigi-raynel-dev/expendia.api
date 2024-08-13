@@ -27,6 +27,7 @@ model User {
   isAdmin           Boolean?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @default(now())
+  loggedIn          DateTime?
   Group             Group[]
   Member            Member[]
   Expense           Expense[]
@@ -34,17 +35,19 @@ model User {
   UserCode          UserCode[]
   UserTerm          UserTerm[]
   NotificationToken NotificationToken[]
+  notificationId    String?
 }
 
 model Group {
-  id        String    @id @default(cuid())
-  title     String
-  user_id   String
-  creator   User      @relation(fields: [user_id], references: [id])
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now())
-  Member    Member[]
-  Expense   Expense[]
+  id           String         @id @default(cuid())
+  title        String
+  user_id      String
+  creator      User           @relation(fields: [user_id], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now())
+  Member       Member[]
+  Expense      Expense[]
+  Notification Notification[]
 }
 
 model Member {
@@ -59,17 +62,18 @@ model Member {
 }
 
 model Expense {
-  id        String    @id @default(cuid())
-  title     String
-  group_id  String
-  cost      Decimal
-  user_id   String
-  group     Group     @relation(fields: [group_id], references: [id], onDelete: Cascade)
-  creator   User      @relation(fields: [user_id], references: [id])
-  dueDate   DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now())
-  Paying    Paying[]
+  id           String         @id @default(cuid())
+  title        String
+  group_id     String
+  cost         Decimal
+  user_id      String
+  group        Group          @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  creator      User           @relation(fields: [user_id], references: [id])
+  dueDate      DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now())
+  Paying       Paying[]
+  Notification Notification[]
 }
 
 model Paying {
@@ -136,5 +140,23 @@ model NotificationToken {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Notification Notification?
+}
+
+model Notification {
+  id                  String   @id @default(cuid())
+  notificationTokenId String   @unique
+  notificationId      String
+  topic               String?
+  groupId             String?
+  expenseId           String?
+  title               String
+  body                String   @db.Text
+  url                 String?
+  createdAt           DateTime @default(now())
+
+  notificationToken NotificationToken @relation(fields: [notificationTokenId], references: [id], onDelete: Cascade)
+  group             Group?            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  expense           Expense?          @relation(fields: [expenseId], references: [id], onDelete: Cascade)
 }

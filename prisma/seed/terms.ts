@@ -16,7 +16,7 @@ export const createEssentialTerms = async () => {
     }
   ]
 
-  terms.map(async data => {
+  for (const data of terms) {
     const term = await prisma.term.findUnique({
       where: {
         slug: data.slug
@@ -24,5 +24,5 @@ export const createEssentialTerms = async () => {
     })
 
     if (!term) await prisma.term.create({ data })
-  })
+  }
 }

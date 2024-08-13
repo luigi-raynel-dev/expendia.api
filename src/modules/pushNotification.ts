@@ -4,11 +4,16 @@ import { prisma } from '../lib/prisma'
 export const getUserNotificationTokens = async (user_id: string) => {
   const userTokens = await prisma.notificationToken.findMany({
     select: {
-      token: true
+      token: true,
+      id: true
     },
     where: {
       user_id
-    }
+    },
+    orderBy: {
+      createdAt: 'desc'
+    },
+    take: 3
   })
 
   return userTokens
@@ -20,10 +25,21 @@ export const sendPushNotification = async (
 ) => {
   const userTokens = await getUserNotificationTokens(user_id)
 
-  userTokens.map(async ({ token }) => {
-    await sendFcmMessage({
+  for (const { token, id } of userTokens) {
+    const notificationId = await sendFcmMessage({
       token,
       ...message
     })
-  })
+
+    if (notificationId) {
+      await prisma.notification.create({
+        data: {
+          notificationTokenId: id,
+          notificationId,
+          ...message.data,
+          ...message.notification
+        }
+      })
+    }
+  }
 }
