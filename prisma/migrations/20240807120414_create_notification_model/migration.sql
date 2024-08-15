@@ -1,6 +1,3 @@
--- AlterTable
-ALTER TABLE `User` ADD COLUMN `notificationId` VARCHAR(191) NULL;
-
 -- CreateTable
 CREATE TABLE `Notification` (
     `id` VARCHAR(191) NOT NULL,
@@ -14,7 +11,7 @@ CREATE TABLE `Notification` (
     `url` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
-    UNIQUE INDEX `Notification_notificationTokenId_key`(`notificationTokenId`),
+    UNIQUE INDEX `Notification_notificationId_key`(`notificationId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
