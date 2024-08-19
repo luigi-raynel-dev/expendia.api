@@ -119,6 +119,8 @@ export const expensesExpirationNotification = async (diffs: number[]) => {
     }
   })
 
+  console.log(expenses)
+
   for (const expense of expenses) {
     for (const member of expense.Paying) {
       if (!member.paid && (member.paying.password || member.paying.googleId)) {
