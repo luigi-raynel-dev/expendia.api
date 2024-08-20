@@ -52,7 +52,6 @@ export async function authRoutes(fastify: FastifyInstance) {
     })
 
     const { email, password } = createUserBody.parse(request.body)
-    console.log(email)
 
     let user = await prisma.user.findUnique({
       where: { email }

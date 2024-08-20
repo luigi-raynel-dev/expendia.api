@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import winston from 'winston'
+import winston, { log } from 'winston'
 
 const dir =
   process.env.NODE_ENV === 'production'
@@ -37,10 +37,11 @@ export const cleanOldLogs = (daysLimit = 7) => {
     if (!err) {
       files
         .filter(file => file.isDirectory())
-        .map(folder => {
-          fs.readdirSync(folder.name).forEach(file => {
+        .forEach(folder => {
+          const folderPath = path.join(dir, folder.name)
+          fs.readdirSync(folderPath).forEach(file => {
             if (file.endsWith('.log')) {
-              const filePath = path.join(folder.name, file)
+              const filePath = path.join(folderPath, file)
               const stat = fs.statSync(filePath)
               const ageInDays =
                 (Date.now() - stat.mtime.getTime()) / (1000 * 60 * 60 * 24)
@@ -48,6 +49,6 @@ export const cleanOldLogs = (daysLimit = 7) => {
             }
           })
         })
-    }
+    } else console.error(err)
   })
 }

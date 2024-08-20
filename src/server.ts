@@ -12,6 +12,7 @@ import { userRoutes } from './routes/user'
 import { termsRoutes } from './routes/terms'
 import { pushNotificationRoutes } from './routes/pushNotification'
 import { schedule } from './jobs/schedule'
+import { logRoutes } from './routes/log'
 
 const schema = {
   type: 'object',
@@ -103,6 +104,7 @@ async function bootstrap() {
   await fastify.register(expenseRoutes)
   await fastify.register(termsRoutes)
   await fastify.register(pushNotificationRoutes)
+  await fastify.register(logRoutes)
 
   // cron jobs
   await schedule.run()
