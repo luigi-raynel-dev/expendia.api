@@ -10,9 +10,11 @@ import {
 } from '../modules/expense'
 import {
   expensePaymentNotification,
+  expensesExpirationNotification,
   fullyPaidExpenseNotification,
   newExpenseNotification
 } from '../modules/notifications'
+import { sysadmin } from '../plugins/sysadmin'
 
 export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -414,6 +416,26 @@ export async function expenseRoutes(fastify: FastifyInstance) {
           id
         }
       })
+
+      return reply.status(200).send({
+        status: true
+      })
+    }
+  )
+
+  fastify.post(
+    '/expenses/expiration/notification',
+    {
+      onRequest: [authenticate, sysadmin]
+    },
+    async (request, reply) => {
+      const bodyScheme = z.object({
+        diffs: z.array(z.number())
+      })
+
+      const { diffs } = bodyScheme.parse(request.body)
+
+      await expensesExpirationNotification(diffs)
 
       return reply.status(200).send({
         status: true
