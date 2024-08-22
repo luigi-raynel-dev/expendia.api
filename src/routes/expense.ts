@@ -435,10 +435,11 @@ export async function expenseRoutes(fastify: FastifyInstance) {
 
       const { diffs } = bodyScheme.parse(request.body)
 
-      await expensesExpirationNotification(diffs)
+      const expenses = await expensesExpirationNotification(diffs)
 
       return reply.status(200).send({
-        status: true
+        status: true,
+        expenses
       })
     }
   )

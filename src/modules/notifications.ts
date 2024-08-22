@@ -119,24 +119,26 @@ export const expensesExpirationNotification = async (diffs: number[]) => {
     }
   })
 
-  for (const expense of expenses) {
-    for (const member of expense.Paying) {
-      if (!member.paid && (member.paying.password || member.paying.googleId)) {
-        await sendPushNotification(member.paying.id, {
-          data: {
-            topic: 'EXPENSE_EXPIRATION',
-            groupId: expense.group_id,
-            expenseId: expense.id,
-            url: `${expoScheme}expense/${expense.id}`
-          },
-          notification: {
-            title: `A despesa ${getFormatedDaysToExpire(expense.dueDate)}`,
-            body: `A despesa: ${expense.title} ${getFormatedDaysToExpire(
-              expense.dueDate
-            )}.`
-          }
-        })
-      }
-    }
-  }
+  // for (const expense of expenses) {
+  //   for (const member of expense.Paying) {
+  //     if (!member.paid && (member.paying.password || member.paying.googleId)) {
+  //       await sendPushNotification(member.paying.id, {
+  //         data: {
+  //           topic: 'EXPENSE_EXPIRATION',
+  //           groupId: expense.group_id,
+  //           expenseId: expense.id,
+  //           url: `${expoScheme}expense/${expense.id}`
+  //         },
+  //         notification: {
+  //           title: `A despesa ${getFormatedDaysToExpire(expense.dueDate)}`,
+  //           body: `A despesa: ${expense.title} ${getFormatedDaysToExpire(
+  //             expense.dueDate
+  //           )}.`
+  //         }
+  //       })
+  //     }
+  //   }
+  // }
+
+  return expenses
 }
