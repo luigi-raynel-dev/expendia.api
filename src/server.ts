@@ -11,7 +11,6 @@ import { expenseRoutes } from './routes/expense'
 import { userRoutes } from './routes/user'
 import { termsRoutes } from './routes/terms'
 import { pushNotificationRoutes } from './routes/pushNotification'
-import { schedule } from './jobs/schedule'
 import { logRoutes } from './routes/log'
 
 const schema = {
@@ -105,9 +104,6 @@ async function bootstrap() {
   await fastify.register(termsRoutes)
   await fastify.register(pushNotificationRoutes)
   await fastify.register(logRoutes)
-
-  // cron jobs
-  await schedule.run()
 
   await fastify.listen({
     port: Number(process.env.FASTIFY_PORT) || 3333,
