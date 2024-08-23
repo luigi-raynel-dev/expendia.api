@@ -431,19 +431,17 @@ export async function expenseRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const bodyScheme = z.object({
-        diffs: z.array(z.number())
+        gte: z.number(),
+        lt: z.number()
       })
 
-      const { diffs } = bodyScheme.parse(request.body)
+      const { gte, lt } = bodyScheme.parse(request.body)
 
-      const datesByDaysDiffs = getDatesByDaysDiffs(diffs)
-
-      const expenses = await expensesExpirationNotification(diffs)
+      const expenses = await expensesExpirationNotification(gte, lt)
 
       return reply.status(200).send({
         status: true,
-        expenses,
-        datesByDaysDiffs
+        expenses
       })
     }
   )
