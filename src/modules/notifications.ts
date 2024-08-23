@@ -3,7 +3,6 @@ import { inviteMember } from './invite'
 import { sendPushNotification } from './pushNotification'
 import { convertFloatToMoney, getFormatedDaysToExpire } from './expense'
 import { prisma } from '../lib/prisma'
-import { getDatesByDaysDiffs } from './date'
 import dayjs from 'dayjs'
 
 const expoScheme = process.env.EXPO_SCHEME || ''
@@ -124,26 +123,26 @@ export const expensesExpirationNotification = async (
     }
   })
 
-  // for (const expense of expenses) {
-  //   for (const member of expense.Paying) {
-  //     if (!member.paid && (member.paying.password || member.paying.googleId)) {
-  //       await sendPushNotification(member.paying.id, {
-  //         data: {
-  //           topic: 'EXPENSE_EXPIRATION',
-  //           groupId: expense.group_id,
-  //           expenseId: expense.id,
-  //           url: `${expoScheme}expense/${expense.id}`
-  //         },
-  //         notification: {
-  //           title: `A despesa ${getFormatedDaysToExpire(expense.dueDate)}`,
-  //           body: `A despesa: ${expense.title} ${getFormatedDaysToExpire(
-  //             expense.dueDate
-  //           )}.`
-  //         }
-  //       })
-  //     }
-  //   }
-  // }
+  for (const expense of expenses) {
+    for (const member of expense.Paying) {
+      if (!member.paid && (member.paying.password || member.paying.googleId)) {
+        await sendPushNotification(member.paying.id, {
+          data: {
+            topic: 'EXPENSE_EXPIRATION',
+            groupId: expense.group_id,
+            expenseId: expense.id,
+            url: `${expoScheme}expense/${expense.id}`
+          },
+          notification: {
+            title: `A despesa ${getFormatedDaysToExpire(expense.dueDate)}`,
+            body: `A despesa: ${expense.title} ${getFormatedDaysToExpire(
+              expense.dueDate
+            )}.`
+          }
+        })
+      }
+    }
+  }
 
   return expenses
 }

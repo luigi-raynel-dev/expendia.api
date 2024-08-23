@@ -5,17 +5,12 @@ import { authenticate } from '../plugins/authenticate'
 import dayjs from 'dayjs'
 import { groupMember, groupMemberByExpense } from '../plugins/groupMember'
 import {
-  convertFloatToMoney,
-  getFormatedDaysToExpire
-} from '../modules/expense'
-import {
   expensePaymentNotification,
   expensesExpirationNotification,
   fullyPaidExpenseNotification,
   newExpenseNotification
 } from '../modules/notifications'
 import { sysadmin } from '../plugins/sysadmin'
-import { getDatesByDaysDiffs } from '../modules/date'
 
 export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -437,11 +432,10 @@ export async function expenseRoutes(fastify: FastifyInstance) {
 
       const { gte, lt } = bodyScheme.parse(request.body)
 
-      const expenses = await expensesExpirationNotification(gte, lt)
+      await expensesExpirationNotification(gte, lt)
 
       return reply.status(200).send({
-        status: true,
-        expenses
+        status: true
       })
     }
   )
