@@ -15,6 +15,7 @@ import {
   newExpenseNotification
 } from '../modules/notifications'
 import { sysadmin } from '../plugins/sysadmin'
+import { getDatesByDaysDiffs } from '../modules/date'
 
 export async function expenseRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -435,11 +436,14 @@ export async function expenseRoutes(fastify: FastifyInstance) {
 
       const { diffs } = bodyScheme.parse(request.body)
 
+      const datesByDaysDiffs = getDatesByDaysDiffs(diffs)
+
       const expenses = await expensesExpirationNotification(diffs)
 
       return reply.status(200).send({
         status: true,
-        expenses
+        expenses,
+        datesByDaysDiffs
       })
     }
   )
